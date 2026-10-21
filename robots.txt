@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin-login
+Disallow: /admin-produtos
+Disallow: /admin-pedidos
+Disallow: /admin-marketing
+Disallow: /admin-cms
+Disallow: /admin-configuracoes
+Disallow: /admin-equipe
+Disallow: /admin-estatisticas
+Disallow: /admin-historico
+Disallow: /api/
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://www.iworldprime.com.br/sitemap.xml

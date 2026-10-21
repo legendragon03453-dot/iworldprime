@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipe - Admin iworldprime</title>
+    <link rel="stylesheet" href="admin-style.css?v=2">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-5" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="admin-auth.js?v=4"></script>
+</head>
+<body class="admin-body" style="display: none;">
+
+    <!-- Sidebar será injetada aqui -->
+    <aside class="admin-sidebar" id="sidebarTemplate">
+        <!-- Sidebar placeholder -->
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1 class="admin-title">Gestão de Equipe (Acesso CEO)</h1>
+            <button class="admin-btn primary" onclick="document.getElementById('equipeModal').classList.add('active')"><i class="fa-solid fa-user-plus"></i> Novo Membro</button>
+        </header>
+
+        <div class="admin-card">
+            <h3>Membros com acesso ao Painel Admin</h3>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Nível de Acesso</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="equipeTable">
+                        <tr>
+                            <td>James Nobre</td>
+                            <td>james@iworldprime.com</td>
+                            <td><span style="color: #CEE7E6;">CEO (Acesso Total)</span></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Equipe de Vendas</td>
+                            <td>equipe@iworldprime.com</td>
+                            <td><span style="color: rgba(255,255,255,0.7);">Membro (Produtos/Estatísticas)</span></td>
+                            <td>
+                                <button class="admin-btn secondary" style="padding: 5px 10px; font-size: 12px; color: #ff4d4d;" title="Remover"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div class="admin-modal-overlay" id="equipeModal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h2>Adicionar Novo Membro</h2>
+                <button class="admin-modal-close" onclick="document.getElementById('equipeModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="equipeForm">
+                <div class="admin-form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="membroNome" required>
+                </div>
+                <div class="admin-form-group">
+                    <label>E-mail Corporativo</label>
+                    <input type="email" id="membroEmail" required>
+                </div>
+                <div class="admin-form-group">
+                    <label>Senha Provisória</label>
+                    <input type="password" id="membroSenha" required>
+                </div>
+                <div class="admin-form-group">
+                    <label>Nível de Acesso</label>
+                    <select id="membroAcesso">
+                        <option value="member">Membro Padrão</option>
+                        <option value="ceo">CEO (Administrador Total)</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" class="admin-btn primary">Criar Acesso</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin-sidebar.js?v=4"></script>
+    <script>
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);                    
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultEquipe = [
+                { id: '1', name: 'James Nobre', email: 'james@iworldprime.com', role: 'ceo', passwordHash: '81462fcdf5baec894c2e1e2a1757393e61b8784d3eb4bf6f286ba87792a8c185' }, // iWorld9751!
+                { id: '2', name: 'Equipe de Vendas', email: 'equipe@iworldprime.com', role: 'member', passwordHash: '1d1023d75fc8425a88fbf258109bd579694c1071847ccf9b0a0befc81e1bb9c9' } // equipe123
+            ];
+
+            function getEquipe() {
+                const data = localStorage.getItem('equipe');
+                if(!data) {
+                    localStorage.setItem('equipe', JSON.stringify(defaultEquipe));
+                    return defaultEquipe;
+                }
+                return JSON.parse(data);
+            }
+
+            function saveEquipe(equipe) {
+                localStorage.setItem('equipe', JSON.stringify(equipe));
+            }
+
+            function renderEquipe() {
+                const equipe = getEquipe();
+                const tableBody = document.getElementById('equipeTable');
+                if(!tableBody) return;
+                
+                tableBody.innerHTML = '';
+                equipe.forEach(m => {
+                    const isCeo = m.role === 'ceo';
+                    const roleLabel = isCeo ? 'CEO (Acesso Total)' : 'Membro (Produtos/Estatísticas)';
+                    const roleColor = isCeo ? '#CEE7E6' : 'rgba(255,255,255,0.7)';
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${m.name}</td>
+                        <td>${m.email}</td>
+                        <td><span style="color: ${roleColor};">${roleLabel}</span></td>
+                        <td>
+                            ${m.id === '1' ? '-' : `
+                                <button class="admin-btn secondary" style="padding: 5px 10px; font-size: 12px; color: #ff4d4d; border: none; background: transparent; cursor: pointer;" title="Remover" onclick="removerMembro('${m.id}')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            `}
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+
+            window.removerMembro = function(id) {
+                if(confirm('Tem certeza que deseja remover este membro da equipe?')) {
+                    let equipe = getEquipe();
+                    equipe = equipe.filter(m => m.id !== id);
+                    saveEquipe(equipe);
+                    renderEquipe();
+                }
+            };
+
+            const form = document.getElementById('equipeForm');
+            if(form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('membroNome').value;
+                    const email = document.getElementById('membroEmail').value;
+                    const password = document.getElementById('membroSenha').value;
+                    const role = document.getElementById('membroAcesso').value;
+                    const passwordHash = await sha256(password);
+
+                    const novoMembro = {
+                        id: Math.random().toString(36).substr(2, 9),
+                        name,
+                        email,
+                        role,
+                        passwordHash
+                    };
+
+                    const equipe = getEquipe();
+                    
+                    if(equipe.some(m => m.email.toLowerCase() === email.toLowerCase())) {
+                        alert('Este e-mail já está cadastrado!');
+                        return;
+                    }
+
+                    equipe.push(novoMembro);
+                    saveEquipe(equipe);
+                    
+                    form.reset();
+                    document.getElementById('equipeModal').classList.remove('active');
+                    renderEquipe();
+                    alert('Membro da equipe adicionado com sucesso!');
+                });
+            }
+
+            renderEquipe();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Vercel / ambiente (segredos ficam só na Vercel)
+.vercel
+.env*
+!.env.example
+
+# Configuração local do editor/assistente
+.claude/
+
+# Exportações do banco antigo (têm dados pessoais de clientes — LGPD)
+backup/
+
+node_modules/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Site - Admin iworldprime</title>
+    <link rel="stylesheet" href="admin-style.css?v=2">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-5" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="admin-auth.js?v=4"></script>
+    <script src="admin-sidebar.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.0" integrity="sha384-De+l/Df7qym5QBDVocD3+gW1S7IjR3epf+6KbRDjB3FCCzM/LqVTwqckT6FhFar8" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="supabase.js?v=21"></script>
+</head>
+<body class="admin-body" style="display: none;">
+
+    <!-- Sidebar Injetada -->
+    <aside class="admin-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1 class="admin-title">Gerenciar Imagens do Site (CMS)</h1>
+            <button class="admin-btn primary" onclick="publishChanges()"><i class="fa-solid fa-cloud-arrow-up"></i> Publicar Alterações</button>
+        </header>
+
+        <!-- Studio de Banners (Live Preview & Edição em Tempo Real) -->
+        <div class="admin-card" style="margin-bottom: 30px; background: rgba(18, 18, 20, 0.8); border: 1px solid rgba(206, 231, 230, 0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2 style="color: #fff; font-size: 22px; margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #CEE7E6;"></i> Studio de Banners (Live Preview & Edição em Tempo Real)
+                    </h2>
+                    <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin: 4px 0 0 0;">
+                        Selecione a página ou categoria, faça upload de imagens ou altere os textos para ver o resultado ao vivo antes de salvar.
+                    </p>
+                </div>
+                <button class="admin-btn primary" onclick="publishBannerStudio()" style="font-size: 14px; padding: 10px 22px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar e Publicar Banner no Site
+                </button>
+            </div>
+
+            <!-- Grid: Formulário de Edição à Esquerda (380px) & Live Preview à Direita -->
+            <div style="display: grid; grid-template-columns: 380px 1fr; gap: 25px; align-items: start;">
+                
+                <!-- Coluna 1: Controles de Configuração -->
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                    
+                    <div class="admin-form-group" style="margin: 0;">
+                        <label style="color: #CEE7E6; font-weight: 600;">Selecione a Categoria / Página</label>
+                        <select id="studioCat" onchange="loadStudioBanner()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px; border-radius: 6px; width: 100%; font-size: 14px;">
+                            <option value="Geral">Home / Loja Principal (Geral)</option>
+                            <option value="iPhones">iPhones</option>
+                            <option value="iPads">iPads</option>
+                            <option value="Macs">Macs</option>
+                            <option value="JBL">JBL</option>
+                            <option value="Playstation">PlayStation 5</option>
+                            <option value="Hollyland">Hollyland</option>
+                            <option value="Acessórios">Acessórios / Drones</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group" style="margin: 0;">
+                        <label style="color: #fff; font-size: 13px;">Upload de Imagem de Fundo</label>
+                        <input type="file" accept="image/*" id="studioFileInp" onchange="handleStudioFileUpload(this)" style="display: none;">
+                        <button type="button" class="admin-btn secondary" onclick="document.getElementById('studioFileInp').click()" style="width: 100%; justify-content: center; padding: 10px; font-size: 13px; gap: 8px;">
+                            <i class="fa-solid fa-cloud-arrow-up" style="color: #34c759;"></i> <span id="studioFileNameLbl">Carregar Imagem do Computador</span>
+                        </button>
+                    </div>
+
+                    <div class="admin-form-group" style="margin: 0;">
+                        <label style="color: rgba(255,255,255,0.7); font-size: 12px;">ou Insira a URL Direta da Imagem</label>
+                        <input type="text" id="studioUrlInp" placeholder="https://..." oninput="updateLivePreview()" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; width: 100%;">
+                    </div>
+
+                    <div class="admin-form-group" style="margin: 0;">
+                        <label style="color: rgba(255,255,255,0.7); font-size: 12px;">Banners Sugeridos (1-Clique)</label>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button type="button" class="admin-btn secondary" style="padding: 4px 8px; font-size: 10px;" onclick="setPresetBanner('/IMAGES/BANNER%20SECTION.webp')">Vision Pro</button>
+                            <button type="button" class="admin-btn secondary" style="padding: 4px 8px; font-size: 10px;" onclick="setPresetBanner('/PRODUCT%20COLLECTION/BANNER%20MAP%20[PRODUCT%20COLLECTION].png')">Coleção Map</button>
+                            <button type="button" class="admin-btn secondary" style="padding: 4px 8px; font-size: 10px;" onclick="setPresetBanner('/IMAGES/PRODUCTS/macbook_mockup.jpg')">MacBook</button>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 5px 0;">
+
+                    <div class="admin-form-group" style="margin: 0;">
+                        <label style="color: #fff; font-size: 13px;">Título do Banner</label>
+                        <input type="text" id="studioTitleInp" placeholder="Ex: iPhone 17 Pro Max" oninput="updateLivePreview()" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; width: 100%;">
+                    </div>
+
+                    <div class="admin-form-group" style="margin: 0;">
+                        <label style="color: #fff; font-size: 13px;">Subtítulo / Descrição</label>
+                        <textarea id="studioSubtitleInp" placeholder="Ex: Titânio. Tão forte. Tão leve. Tão Pro." oninput="updateLivePreview()" rows="2" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; width: 100%; resize: vertical;"></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="admin-form-group" style="margin: 0;">
+                            <label style="color: #fff; font-size: 12px;">Texto do Botão (CTA)</label>
+                            <input type="text" id="studioCtaTextInp" placeholder="Ex: Comprar Agora" oninput="updateLivePreview()" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 12px; width: 100%;">
+                        </div>
+                        <div class="admin-form-group" style="margin: 0;">
+                            <label style="color: #fff; font-size: 12px;">Link do Botão</label>
+                            <input type="text" id="studioCtaLinkInp" placeholder="Ex: iphone.html" oninput="updateLivePreview()" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 12px; width: 100%;">
+                        </div>
+                    </div>
+
+                    <div class="admin-form-group" style="margin: 0;">
+                        <label style="color: #fff; font-size: 12px;">Alinhamento do Texto</label>
+                        <select id="studioAlignInp" onchange="updateLivePreview()" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 12px; width: 100%;">
+                            <option value="center">Centralizado</option>
+                            <option value="flex-start">Alinhado à Esquerda</option>
+                            <option value="flex-end">Alinhado à Direita</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Coluna 2: Live Preview em Tempo Real -->
+                <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span style="font-size: 13px; font-weight: bold; color: #CEE7E6; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-desktop"></i> Live Preview em Tempo Real (Como o cliente verá no site)
+                        </span>
+                        <span id="previewTagCat" style="background: rgba(206,231,230,0.15); color: #CEE7E6; font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 600;">Geral (Home)</span>
+                    </div>
+
+                    <!-- Container do Banner simulando o layout oficial -->
+                    <div id="bannerLivePreviewCard" style="position: relative; width: 100%; min-height: 420px; border-radius: 14px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+                        
+                        <!-- Imagem de Fundo em Tempo Real -->
+                        <img id="previewBgImg" src="/IMAGES/BANNER%20SECTION.webp" alt="Banner Preview" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: all 0.3s ease;">
+                        
+                        <!-- Sombreamento de Contraste -->
+                        <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.75) 100%);"></div>
+
+                        <!-- Conteúdo de Texto em Tempo Real -->
+                        <div id="previewTextContainer" style="position: relative; z-index: 2; padding: 40px 35px; width: 100%; text-align: center; color: #ffffff; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+                            <h1 id="previewTitle" style="font-size: 38px; font-weight: 700; margin: 0; text-shadow: 0 4px 14px rgba(0,0,0,0.9); color: #ffffff; line-height: 1.2;">
+                                Título do Banner
+                            </h1>
+                            <p id="previewSubtitle" style="font-size: 16px; margin: 0; max-width: 620px; color: rgba(255,255,255,0.85); text-shadow: 0 2px 10px rgba(0,0,0,0.9); line-height: 1.5;">
+                                Descrição e chamada chamativa para o seu produto em destaque.
+                            </p>
+                            <a id="previewCtaBtn" href="#" onclick="event.preventDefault()" style="margin-top: 12px; background: #ffffff; color: #000000; font-weight: 600; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-size: 14px; box-shadow: 0 5px 20px rgba(255,255,255,0.3); transition: transform 0.2s;">
+                                Comprar Agora
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+            <!-- Menu de Navegação (Categorias) Settings -->
+            <div class="admin-card" style="grid-column: span 2; margin-top: 20px;">
+                <h3>Menu de Navegação (Categorias)</h3>
+                <p style="font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 15px;">
+                    Selecione quais links e categorias serão visíveis no menu de navegação de todas as páginas. Você pode mudar a ordem de exibição, renomear e adicionar novos links dinamicamente.
+                </p>
+                <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                
+                <div id="navbarMenuManagerList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Menu items will be rendered dynamically here -->
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="admin-btn secondary" onclick="addNewMenuLink()" style="font-size: 13px; padding: 8px 15px;">
+                        <i class="fa-solid fa-plus"></i> Adicionar Novo Link
+                    </button>
+                    <button type="button" class="admin-btn primary" onclick="saveMenuConfig()" style="font-size: 13px; padding: 8px 15px;">
+                        <i class="fa-solid fa-save"></i> Salvar Configurações do Menu
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="admin-card" style="margin-top: 30px;">
+            <h3>Pagamentos e Banco de Dados</h3>
+            <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 20px;">O checkout usa o <b>Mercado Pago</b> (Checkout Pro) e os produtos ficam no <b>Supabase</b>. As chaves ficam nas variáveis de ambiente da Vercel (<code>MP_ACCESS_TOKEN</code> e <code>SUPABASE_SERVICE_KEY</code>) — esta página é servida ao navegador, então os valores nunca aparecem aqui.</p>
+            <form>
+                <div class="admin-form-group">
+                    <label>Mercado Pago — Access Token</label>
+                    <input type="text" value="APP_USR-•••••••••••••••••••••" disabled>
+                </div>
+                <div class="admin-form-group">
+                    <label>Supabase — Service Role</label>
+                    <input type="text" value="sb_secret_•••••••••••••••••••••" disabled>
+                </div>
+                <a class="admin-btn secondary" href="https://vercel.com/legendragon03453-dots-projects/i-world-prime/settings/environment-variables" target="_blank" rel="noopener noreferrer">Gerenciar na Vercel</a>
+            </form>
+        </div>
+
+    </main>
+
+    <script>
+        let menuConfig = [];
+
+        const defaultNavbar = [
+            { name: "Loja", url: "loja.html", type: "system", visible: true },
+            { name: "iPhones", url: "iphone.html", type: "category", visible: true },
+            { name: "Macs", url: "macs.html", type: "category", visible: true },
+            { name: "JBL", url: "jbl.html", type: "category", visible: true },
+            { name: "PlayStation 5", url: "playstation.html", type: "category", visible: true },
+            { name: "Hollyland", url: "hollyland.html", type: "category", visible: true },
+                        { name: "Acessórios", url: "acessorios.html", type: "category", visible: true },
+            { name: "iPads", url: "ipads.html", type: "category", visible: false },
+            { name: "Suporte", url: "suporte.html", type: "system", visible: true }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // loadBanner nunca foi definido; a chamada morta estourava um
+            // ReferenceError e impedia o loadMenuConfig() abaixo de rodar.
+            if (typeof loadBanner === 'function') loadBanner();
+            loadMenuConfig();
+        });
+
+        function loadMenuConfig() {
+            const stored = localStorage.getItem('navbar_menu_config');
+            if (stored) {
+                try {
+                    menuConfig = JSON.parse(stored);
+                } catch(e) {
+                    menuConfig = [...defaultNavbar];
+                }
+            } else {
+                menuConfig = [...defaultNavbar];
+            }
+            renderMenuConfig();
+        }
+
+        function renderMenuConfig() {
+            const container = document.getElementById('navbarMenuManagerList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            menuConfig.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.gap = '15px';
+                div.style.background = 'rgba(255, 255, 255, 0.05)';
+                div.style.padding = '12px 15px';
+                div.style.borderRadius = '6px';
+                div.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+
+                div.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                        <span style="font-size: 10px; color: rgba(255,255,255,0.4);">Exibir</span>
+                        <input type="checkbox" id="menu_vis_${index}" ${item.visible ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer; accent-color:#0071e3;">
+                    </div>
+                    <div style="flex: 1; display: flex; gap: 15px;">
+                        <div style="flex: 1;">
+                            <span style="font-size: 11px; color: rgba(255,255,255,0.5); display:block; margin-bottom:4px;">Nome no Menu</span>
+                            <input type="text" id="menu_name_${index}" value="${item.name}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 12px; border-radius: 4px; width: 100%; font-size:13px;">
+                        </div>
+                        <div style="flex: 1.5;">
+                            <span style="font-size: 11px; color: rgba(255,255,255,0.5); display:block; margin-bottom:4px;">Link / URL</span>
+                            <input type="text" id="menu_url_${index}" value="${item.url}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 12px; border-radius: 4px; width: 100%; font-size:13px;">
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top: 15px;">
+                        <button type="button" onclick="moveMenuItem(${index}, -1)" class="admin-btn" style="padding: 6px 10px; font-size: 12px; cursor:pointer;" title="Mover para cima"><i class="fa-solid fa-arrow-up"></i></button>
+                        <button type="button" onclick="moveMenuItem(${index}, 1)" class="admin-btn" style="padding: 6px 10px; font-size: 12px; cursor:pointer;" title="Mover para baixo"><i class="fa-solid fa-arrow-down"></i></button>
+                        <button type="button" onclick="deleteMenuLink(${index})" class="admin-btn" style="background: #ff3b30; border: none; color:#fff; padding: 6px 10px; font-size: 12px; cursor:pointer;" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addNewMenuLink() {
+            menuConfig.push({ name: "Nova Categoria", url: "acessorios.html", type: "category", visible: true });
+            renderMenuConfig();
+        }
+
+        function deleteMenuLink(index) {
+            if(confirm('Tem certeza de que deseja remover este item do menu?')) {
+                menuConfig.splice(index, 1);
+                renderMenuConfig();
+            }
+        }
+
+        function moveMenuItem(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= menuConfig.length) return;
+            
+            // Swap positions
+            const temp = menuConfig[index];
+            menuConfig[index] = menuConfig[targetIndex];
+            menuConfig[targetIndex] = temp;
+            
+            renderMenuConfig();
+        }
+
+        function saveMenuConfig() {
+            menuConfig.forEach((item, index) => {
+                const chk = document.getElementById(`menu_vis_${index}`);
+                const nameInp = document.getElementById(`menu_name_${index}`);
+                const urlInp = document.getElementById(`menu_url_${index}`);
+                
+                if (chk) item.visible = chk.checked;
+                if (nameInp) item.name = nameInp.value;
+                if (urlInp) item.url = urlInp.value;
+            });
+
+            localStorage.setItem('navbar_menu_config', JSON.stringify(menuConfig));
+            alert('Configuração do menu de navegação salva com sucesso! As alterações serão aplicadas em todo o site.');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudioBanner();
+            loadMenuConfig();
+        });
+
+        // ==========================================
+        // BANNER STUDIO (LIVE PREVIEW & SYNC)
+        // ==========================================
+        const DEFAULT_BANNER_PRESETS = {
+            'Geral': {
+                url: '/IMAGES/BANNER%20SECTION.webp',
+                title: 'Apple Vision Pro',
+                subtitle: 'Bem-vindo à era da computação espacial.',
+                ctaText: 'Comprar Agora',
+                ctaLink: 'detalhes.html?id=1',
+                align: 'center'
+            },
+            // Estes valores precisam bater com o CATEGORIAS do banners.js — é o
+            // padrão que o site mostra enquanto a categoria não tiver linha na
+            // tabela `banners`.
+            'iPhones': {
+                url: '/IMAGES/BANNERS/iphones.webp',
+                title: 'iPhone 17 Pro Max',
+                subtitle: 'O iPhone mais avançado da Apple, com procedência, homologação Anatel e nota fiscal.',
+                ctaText: 'Comprar iPhone',
+                ctaLink: 'iphone.html',
+                align: 'center'
+            },
+            'iPads': {
+                url: '/IMAGES/BANNERS/ipads.webp',
+                title: 'iPad',
+                subtitle: 'Potência de computador na leveza de um tablet. Ideal para estudo, trabalho e criação.',
+                ctaText: 'Comprar iPad',
+                ctaLink: 'ipads.html',
+                align: 'center'
+            },
+            'Macs': {
+                url: '/IMAGES/BANNERS/macs.webp',
+                title: 'MacBook Air M4',
+                subtitle: 'Desempenho do chip M4 com bateria para o dia inteiro, num corpo de 1,24 kg.',
+                ctaText: 'Comprar MacBook',
+                ctaLink: 'macs.html',
+                align: 'center'
+            },
+            'JBL': {
+                url: '/IMAGES/BANNERS/jbl.webp',
+                title: 'JBL PartyBox & Boombox',
+                subtitle: 'Som potente, graves profundos e show de luzes para levar a festa a qualquer lugar.',
+                ctaText: 'Comprar JBL',
+                ctaLink: 'jbl.html',
+                align: 'center'
+            },
+            'Playstation': {
+                url: '/IMAGES/BANNERS/playstation.webp',
+                title: 'PlayStation 5',
+                subtitle: 'SSD ultrarrápido, feedback tátil e uma biblioteca de jogos sem igual.',
+                ctaText: 'Comprar PS5',
+                ctaLink: 'playstation.html',
+                align: 'center'
+            },
+            'Hollyland': {
+                url: '/IMAGES/BANNERS/hollyland.webp',
+                title: 'Hollyland',
+                subtitle: 'Microfones sem fio com áudio de estúdio e cancelamento de ruído avançado.',
+                ctaText: 'Comprar Hollyland',
+                ctaLink: 'hollyland.html',
+                align: 'center'
+            },
+            'Acessórios': {
+                url: '/IMAGES/BANNERS/acessorios.webp',
+                title: 'Acessórios & Drones',
+                subtitle: 'DJI, Osmo Pocket e Ray-Ban Meta: a tecnologia que completa o seu setup.',
+                ctaText: 'Ver acessórios',
+                ctaLink: 'acessorios.html',
+                align: 'center'
+            }
+        };
+
+        function loadStudioBanner() {
+            const cat = document.getElementById('studioCat').value;
+            const banners = JSON.parse(localStorage.getItem('categoryBanners')) || {};
+            const tagLbl = document.getElementById('previewTagCat');
+            if (tagLbl) tagLbl.textContent = cat;
+
+            let bannerData = banners[cat] || DEFAULT_BANNER_PRESETS[cat] || DEFAULT_BANNER_PRESETS['Geral'];
+            
+            if (typeof bannerData === 'string') {
+                bannerData = {
+                    url: bannerData,
+                    title: cat === 'Geral' ? 'Destaques iWorld Prime' : `Coleção ${cat}`,
+                    subtitle: 'Confira as melhores ofertas e lançamentos exclusivos.',
+                    ctaText: 'Comprar Agora',
+                    ctaLink: `${cat.toLowerCase()}.html`,
+                    align: 'center'
+                };
+            }
+
+            document.getElementById('studioUrlInp').value = bannerData.url || '';
+            document.getElementById('studioTitleInp').value = bannerData.title || '';
+            document.getElementById('studioSubtitleInp').value = bannerData.subtitle || '';
+            document.getElementById('studioCtaTextInp').value = bannerData.ctaText || 'Comprar Agora';
+            document.getElementById('studioCtaLinkInp').value = bannerData.ctaLink || '#';
+            document.getElementById('studioAlignInp').value = bannerData.align || 'center';
+
+            document.getElementById('studioFileNameLbl').textContent = 'Carregar Imagem do Computador';
+
+            updateLivePreview();
+        }
+
+        function handleStudioFileUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                document.getElementById('studioFileNameLbl').textContent = `✓ ${file.name}`;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('studioUrlInp').value = e.target.result;
+                    updateLivePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function setPresetBanner(url) {
+            document.getElementById('studioUrlInp').value = url;
+            updateLivePreview();
+        }
+
+        function updateLivePreview() {
+            const url = document.getElementById('studioUrlInp').value.trim() || '/IMAGES/BANNER%20SECTION.webp';
+            const title = document.getElementById('studioTitleInp').value.trim() || 'Título do Banner';
+            const subtitle = document.getElementById('studioSubtitleInp').value.trim() || 'Descrição e chamada chamativa para o seu produto em destaque.';
+            const ctaText = document.getElementById('studioCtaTextInp').value.trim() || 'Comprar Agora';
+            const ctaLink = document.getElementById('studioCtaLinkInp').value.trim() || '#';
+            const align = document.getElementById('studioAlignInp').value || 'center';
+
+            const bgImg = document.getElementById('previewBgImg');
+            const titleEl = document.getElementById('previewTitle');
+            const subtitleEl = document.getElementById('previewSubtitle');
+            const ctaBtn = document.getElementById('previewCtaBtn');
+            const textContainer = document.getElementById('previewTextContainer');
+
+            if (bgImg) bgImg.src = url;
+            if (titleEl) titleEl.textContent = title;
+            if (subtitleEl) subtitleEl.textContent = subtitle;
+            if (ctaBtn) {
+                ctaBtn.textContent = ctaText;
+                ctaBtn.href = ctaLink;
+            }
+            if (textContainer) {
+                textContainer.style.alignItems = align;
+                textContainer.style.textAlign = align === 'flex-start' ? 'left' : (align === 'flex-end' ? 'right' : 'center');
+            }
+        }
+
+        async function publishBannerStudio() {
+            const cat = document.getElementById('studioCat').value;
+            const url = document.getElementById('studioUrlInp').value.trim();
+            const title = document.getElementById('studioTitleInp').value.trim();
+            const subtitle = document.getElementById('studioSubtitleInp').value.trim();
+            const ctaText = document.getElementById('studioCtaTextInp').value.trim();
+            const ctaLink = document.getElementById('studioCtaLinkInp').value.trim();
+            const align = document.getElementById('studioAlignInp').value;
+
+            if (!url) {
+                alert('Por favor, envie uma imagem ou insira a URL do banner.');
+                return;
+            }
+
+            // Guarda uma cópia local para o Studio reabrir com o que foi digitado.
+            // Quem publica de verdade é o Supabase — o localStorage só existe
+            // neste navegador e nenhum cliente enxerga.
+            const rascunho = JSON.parse(localStorage.getItem('categoryBanners')) || {};
+            rascunho[cat] = { url, title, subtitle, ctaText, ctaLink, align };
+            localStorage.setItem('categoryBanners', JSON.stringify(rascunho));
+
+            const sb = window.supabaseClient;
+            if (!sb) {
+                alert('Supabase não carregou. O banner ficou salvo só neste navegador.');
+                return;
+            }
+
+            const { data: sessao } = await sb.auth.getSession();
+            if (!sessao || !sessao.session) {
+                alert('Você precisa entrar com a conta de admin do Supabase para publicar.\n\n' +
+                      'Enquanto isso o banner ficou salvo apenas neste navegador.\n' +
+                      'Veja o passo a passo em supabase-banners.sql.');
+                return;
+            }
+
+            const { error } = await sb.from('banners').upsert({
+                categoria: cat,
+                imagem_url: url,
+                titulo: title,
+                subtitulo: subtitle,
+                cta_texto: ctaText,
+                cta_link: ctaLink,
+                atualizado_em: new Date().toISOString(),
+                atualizado_por: sessao.session.user.id
+            }, { onConflict: 'categoria' });
+
+            if (error) {
+                console.error('[CMS] Falha ao publicar banner:', error);
+                alert(`Não foi possível publicar: ${error.message}\n\n` +
+                      'Se a mensagem falar em permissão, a conta usada não tem role de admin ' +
+                      'na tabela profiles. O supabase-banners.sql explica como definir.');
+                return;
+            }
+
+            alert(`Banner da categoria "${cat}" publicado. Já está no ar para os clientes.`);
+        }
+    </script>
+</body>
+</html>

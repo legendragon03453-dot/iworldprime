@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas - Admin iworldprime</title>
+    <link rel="stylesheet" href="admin-style.css?v=2">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-5" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="admin-auth.js?v=4"></script>
+    <script src="admin-sidebar.js?v=4"></script>
+</head>
+<body class="admin-body" style="display: none;">
+
+    <!-- Sidebar Injetada -->
+    <aside class="admin-sidebar"></aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1 class="admin-title">Analytics do Site</h1>
+            
+            <div style="display: flex; gap: 15px;">
+                <select id="timeFilter" style="padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 5px;" onchange="updateStats()">
+                    <option value="7">Últimos 7 dias</option>
+                    <option value="30">Últimos 30 dias</option>
+                    <option value="90">Últimos 3 meses</option>
+                </select>
+                <button class="admin-btn secondary" onclick="exportData()"><i class="fa-solid fa-download"></i> Exportar</button>
+            </div>
+        </header>
+
+        <div class="admin-grid-3">
+            <div class="admin-card" style="border-color: #CEE7E6; box-shadow: 0 0 20px rgba(206, 231, 230, 0.1);">
+                <h3>Usuários Ativos Agora <span style="display:inline-block; width:10px; height:10px; background:#4CAF50; border-radius:50%; animation: pulse 2s infinite;"></span></h3>
+                <h2 style="font-size: 50px; margin: 10px 0; color: #CEE7E6;">1</h2>
+                <p style="color: rgba(255,255,255,0.5); font-size: 12px; margin:0;">Pessoas navegando na loja neste momento</p>
+            </div>
+
+            <div class="admin-card">
+                <h3>Visualizações do Site</h3>
+                <h2 id="statViews" style="font-size: 40px; margin: 15px 0;">0</h2>
+                <div style="width: 100%; height: 50px; background: rgba(255,255,255,0.05); border-radius: 5px; position: relative;">
+                    <!-- Gráfico limpo (loja nova) -->
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h3>Pedidos Solicitados</h3>
+                <h2 id="statOrders" style="font-size: 40px; margin: 15px 0;">0</h2>
+                <div style="width: 100%; height: 50px; background: rgba(255,255,255,0.05); border-radius: 5px; position: relative;">
+                    <!-- Gráfico limpo (loja nova) -->
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-grid-3" style="grid-template-columns: 2fr 1fr; margin-top: 30px;">
+            <div class="admin-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Histórico de Logins (Clientes)</h3>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>E-mail</th>
+                                <th>Último Acesso</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 30px; color: rgba(255,255,255,0.5);">Nenhum cliente logado recentemente.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h3>Carrinhos Abandonados</h3>
+                <h2 id="statCarts" style="font-size: 40px; margin: 15px 0; color: #ff4d4d;">0</h2>
+                <button class="admin-btn secondary" style="width: 100%; justify-content: center;" onclick="document.getElementById('emailModal').classList.add('active')">Enviar E-mail Recuperação</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal de Envio de E-mail -->
+    <div class="admin-modal-overlay" id="emailModal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h2>Recuperação de Carrinho</h2>
+                <button class="admin-modal-close" onclick="document.getElementById('emailModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form>
+                <div class="admin-form-group">
+                    <label>Para (Destinatários com carrinho abandonado hoje)</label>
+                    <input type="text" value="joao@gmail.com, maria@empresa.com.br, carlos_88@hotmail.com" disabled style="opacity: 0.7;">
+                </div>
+                <div class="admin-form-group">
+                    <label>Assunto do E-mail</label>
+                    <input type="text" value="Você esqueceu seus itens no carrinho da iworldprime! 🍏">
+                </div>
+                <div class="admin-form-group">
+                    <label>Mensagem</label>
+                    <textarea rows="6">Olá! Vimos que você deixou produtos incríveis no carrinho. Volte agora e finalize sua compra antes que o estoque acabe!</textarea>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="admin-btn secondary" onclick="document.getElementById('emailModal').classList.remove('active')">Cancelar</button>
+                    <button type="button" class="admin-btn primary" onclick="alert('E-mails enviados com sucesso para 3 destinatários!'); document.getElementById('emailModal').classList.remove('active')"><i class="fa-solid fa-paper-plane"></i> Enviar Campanha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+    </style>
+
+    <script>
+        function updateStats() {
+            const filter = document.getElementById('timeFilter').value;
+            const views = document.getElementById('statViews');
+            const orders = document.getElementById('statOrders');
+            const carts = document.getElementById('statCarts');
+            
+            // Dados zerados pois a loja acabou de lançar
+            views.innerText = '0';
+            orders.innerText = '0';
+            carts.innerText = '0';
+        }
+
+        function exportData() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Data,Visualizacoes,Pedidos,Carrinhos Abandonados\n";
+            csvContent += "Hoje,0,0,0\n";
+            
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "estatisticas_iworldprime.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

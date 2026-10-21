@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Alterações - Admin iworldprime</title>
+    <link rel="stylesheet" href="admin-style.css?v=2">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-5" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="admin-auth.js?v=4"></script>
+    <script src="admin-sidebar.js?v=4"></script>
+    <style>
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            padding-bottom: 25px;
+            border-left: 2px solid rgba(206, 231, 230, 0.2);
+        }
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+        .timeline-badge {
+            position: absolute;
+            left: -11px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0071e3;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            box-shadow: 0 0 10px rgba(0,113,227,0.5);
+        }
+        .timeline-content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .timeline-content:hover {
+            border-color: rgba(206, 231, 230, 0.4);
+            transform: translateX(4px);
+        }
+        .tag-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="admin-body" style="display: none;">
+
+    <!-- Sidebar Injetada -->
+    <aside class="admin-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <header class="admin-header">
+            <div>
+                <h1 class="admin-title" style="margin:0;">Histórico de Alterações & Atualizações</h1>
+                <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin: 4px 0 0 0;">
+                    Registro auditável de todas as melhorias, correções e funcionalidades implementadas no sistema.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="/Users/lippo/Downloads/Relatorio_de_Alteracoes_iWorld_Prime.pdf" download="Relatorio_de_Alteracoes_iWorld_Prime.pdf" class="admin-btn primary" style="text-decoration:none;">
+                    <i class="fa-solid fa-file-pdf"></i> Baixar Relatório Completo (PDF)
+                </a>
+            </div>
+        </header>
+
+        <!-- Filtros Rápidos -->
+        <div class="admin-card" style="margin-bottom: 25px; padding: 15px 20px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 600;">Filtrar por Categoria:</span>
+                <button class="admin-btn secondary active-filter" onclick="filterLogs('all', this)" style="padding: 5px 12px; font-size: 12px;">Todos (7)</button>
+                <button class="admin-btn secondary" onclick="filterLogs('imagens', this)" style="padding: 5px 12px; font-size: 12px;">Imagens & Produtos</button>
+                <button class="admin-btn secondary" onclick="filterLogs('cms', this)" style="padding: 5px 12px; font-size: 12px;">Banner Studio CMS</button>
+                <button class="admin-btn secondary" onclick="filterLogs('checkout', this)" style="padding: 5px 12px; font-size: 12px;">Checkout Stripe</button>
+                <button class="admin-btn secondary" onclick="filterLogs('design', this)" style="padding: 5px 12px; font-size: 12px;">Design & UI</button>
+            </div>
+        </div>
+
+        <!-- Linha do Tempo de Alterações -->
+        <div class="admin-card">
+            <div class="timeline" id="timelineContainer">
+                
+                <!-- Item 1: Imagens sem fundo -->
+                <div class="timeline-item log-cat-imagens">
+                    <div class="timeline-badge" style="background:#34c759;"><i class="fa-solid fa-check"></i></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <h3 style="margin:0; color:#fff; font-size:16px;">🖼️ Imagens 100% Transparentes sem Fundo</h3>
+                            <div>
+                                <span class="tag-badge" style="background:rgba(52,199,89,0.15); color:#34c759;">Imagens & Catálogo</span>
+                                <span style="font-size:12px; color:rgba(255,255,255,0.5); margin-left:10px;">22 de Julho de 2026</span>
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 13.5px; line-height: 1.6; margin: 0;">
+                            Substituição de todos os placeholders cinzas quebrados por <b>28 fotos reais em alta definição (PNG e WebP transparentes)</b> diretamente no banco de dados. Inclusão da regra de mesclagem CSS <code>mix-blend-mode: multiply;</code> em <code>style.css</code> para eliminar contornos ou caixas brancas nos cards.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 2: Studio de Banners -->
+                <div class="timeline-item log-cat-cms">
+                    <div class="timeline-badge" style="background:#0071e3;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <h3 style="margin:0; color:#fff; font-size:16px;">🎨 Studio de Banners CMS com Live Preview</h3>
+                            <div>
+                                <span class="tag-badge" style="background:rgba(0,113,227,0.15); color:#0071e3;">Banner Studio CMS</span>
+                                <span style="font-size:12px; color:rgba(255,255,255,0.5); margin-left:10px;">22 de Julho de 2026</span>
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 13.5px; line-height: 1.6; margin: 0;">
+                            Desenvolvimento de editor de banners em tempo real no painel admin (<code>admin-cms.html</code>). O gestor visualiza exatamente a renderização final do banner enquanto faz o upload de imagens, escolhe presets sugeridos ou altera títulos, descrições e botões CTA antes de publicar no site.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 3: Produtos por Categoria -->
+                <div class="timeline-item log-cat-cms">
+                    <div class="timeline-badge" style="background:#af52de;"><i class="fa-solid fa-layer-group"></i></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <h3 style="margin:0; color:#fff; font-size:16px;">📁 Seção Organizacional "Produtos por Categoria"</h3>
+                            <div>
+                                <span class="tag-badge" style="background:rgba(175,82,222,0.15); color:#af52de;">Painel Admin</span>
+                                <span style="font-size:12px; color:rgba(255,255,255,0.5); margin-left:10px;">22 de Julho de 2026</span>
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 13.5px; line-height: 1.6; margin: 0;">
+                            Inclusão de seção sanfonada em <code>admin-produtos.html</code> listando produtos agrupados por cada categoria. Adicionados botões de alternância rápida para ocultar/exibir preços, descrições e tags, além de controles individuais para ocultar produtos na loja.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 4: Checkout Stripe -->
+                <div class="timeline-item log-cat-checkout">
+                    <div class="timeline-badge" style="background:#ff9500;"><i class="fa-solid fa-credit-card"></i></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <h3 style="margin:0; color:#fff; font-size:16px;">💳 Redesign de Checkout Estilo Stripe</h3>
+                            <div>
+                                <span class="tag-badge" style="background:rgba(255,149,0,0.15); color:#ff9500;">Checkout Stripe</span>
+                                <span style="font-size:12px; color:rgba(255,255,255,0.5); margin-left:10px;">21 de Julho de 2026</span>
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 13.5px; line-height: 1.6; margin: 0;">
+                            Reformulação da página <code>checkout-azirt-custom.html</code> para o padrão internacional do Stripe Checkout (divisão 50/50 com resumo à esquerda e pagamento unificado à direita, com abas para Cartão até 12x, PIX e Boleto).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 5: Tags Dinâmicas -->
+                <div class="timeline-item log-cat-design">
+                    <div class="timeline-badge" style="background:#5856d6;"><i class="fa-solid fa-tags"></i></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <h3 style="margin:0; color:#fff; font-size:16px;">🏷️ Gestão Inteligente de Tags e Variantes por Categoria</h3>
+                            <div>
+                                <span class="tag-badge" style="background:rgba(88,86,214,0.15); color:#5856d6;">Design & UI</span>
+                                <span style="font-size:12px; color:rgba(255,255,255,0.5); margin-left:10px;">21 de Julho de 2026</span>
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 13.5px; line-height: 1.6; margin: 0;">
+                            Remoção de referências rígidas a modelos de iPhone para produtos de outras categorias. `detalhes.js` passa a gerar modelos e cores específicos para MacBooks, consoles PlayStation, transmissores Hollyland e caixas JBL, com sugestões rápidas no cadastro do admin.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 6: Suporte Page -->
+                <div class="timeline-item log-cat-design">
+                    <div class="timeline-badge" style="background:#30b0c7;"><i class="fa-solid fa-headset"></i></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <h3 style="margin:0; color:#fff; font-size:16px;">🛠️ Re-estilização da Página de Suporte</h3>
+                            <div>
+                                <span class="tag-badge" style="background:rgba(48,176,199,0.15); color:#30b0c7;">Design & UI</span>
+                                <span style="font-size:12px; color:rgba(255,255,255,0.5); margin-left:10px;">22 de Julho de 2026</span>
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 13.5px; line-height: 1.6; margin: 0;">
+                            Ajuste de recuo superior (`padding-top: 140px`) em `suporte.html` para eliminar colisão com a navbar. Substituição de textos escuros por branco puro e adição de ícones de marcas no WhatsApp, E-mail e FAQ.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 7: Carousel Arrows -->
+                <div class="timeline-item log-cat-design">
+                    <div class="timeline-badge" style="background:#ff2d55;"><i class="fa-solid fa-arrow-right"></i></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <h3 style="margin:0; color:#fff; font-size:16px;">🎠 Carrossel de Produtos Relacionados com Setas</h3>
+                            <div>
+                                <span class="tag-badge" style="background:rgba(255,45,85,0.15); color:#ff2d55;">Design & UI</span>
+                                <span style="font-size:12px; color:rgba(255,255,255,0.5); margin-left:10px;">21 de Julho de 2026</span>
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 13.5px; line-height: 1.6; margin: 0;">
+                            Alinhamento visual dos títulos "Talvez você se interesse" a 5% do container em `detalhes.html` e adição de botões circulares de navegação com chevrons para rolagem suave.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function filterLogs(category, btn) {
+            document.querySelectorAll('.admin-btn').forEach(b => b.classList.remove('active-filter'));
+            btn.classList.add('active-filter');
+
+            const items = document.querySelectorAll('.timeline-item');
+            items.forEach(item => {
+                if(category === 'all' || item.classList.contains(`log-cat-${category}`)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - iworldprime</title>
+    <link rel="stylesheet" href="admin-style.css?v=2">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-5" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="admin-auth.js?v=4"></script>
+    <script src="admin-sidebar.js?v=4"></script>
+</head>
+<body class="admin-body" style="display: none;">
+
+    <!-- Sidebar Injetada -->
+    <aside class="admin-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1 class="admin-title">Bem-vindo ao Admin</h1>
+            <div class="admin-profile">
+                <span>James Nobre</span>
+                <!-- Avatar local (iniciais): o ui-avatars.com externo era bloqueado pelo CSP img-src 'self'. -->
+                <span aria-hidden="true" style="width:40px;height:40px;border-radius:50%;background:#CEE7E6;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">JN</span>
+            </div>
+        </header>
+
+        <div class="admin-grid-3">
+            <div class="admin-card">
+                <h3>Vendas Hoje</h3>
+                <h2 style="font-size: 36px; margin: 10px 0;">R$ 0,00</h2>
+                <span style="color: rgba(255,255,255,0.5);">- Sem vendas hoje</span>
+            </div>
+            
+            <div class="admin-card">
+                <h3>Visitas Hoje</h3>
+                <h2 style="font-size: 36px; margin: 10px 0;">0</h2>
+                <span style="color: rgba(255,255,255,0.5);">- Nenhum visitante</span>
+            </div>
+
+            <div class="admin-card">
+                <h3>Carrinhos Abandonados</h3>
+                <h2 style="font-size: 36px; margin: 10px 0;">0</h2>
+                <a href="admin-estatisticas" style="color: #CEE7E6; text-decoration: none;">Ver detalhes <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <div class="admin-card" style="margin-top: 30px;">
+            <h3>Ações Rápidas</h3>
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <a href="admin-produtos" class="admin-btn primary"><i class="fa-solid fa-plus"></i> Novo Produto</a>
+                <a href="admin-cms" class="admin-btn secondary"><i class="fa-solid fa-image"></i> Trocar Banners</a>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

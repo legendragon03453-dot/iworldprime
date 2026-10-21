@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Produtos - iworldprime</title>
+    <link rel="stylesheet" href="admin-style.css?v=2">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-5" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="admin-auth.js?v=4"></script>
+    <script src="admin-sidebar.js?v=4"></script>
+    <style>
+        .tag-pill {
+            display: inline-block;
+            background: #CEE7E6;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+        .tag-remove { cursor: pointer; margin-left: 5px; }
+        .dynamic-options-container {
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 20px;
+        }
+        .checkbox-group { display: flex; gap: 15px; margin-bottom: 15px; }
+        .checkbox-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; color: #fff; font-size: 14px; margin: 0; }
+        .option-input-area { display: none; margin-bottom: 15px; }
+        .option-input-area.active { display: block; }
+
+        /* ===== Uploader de mídias estilo Shopify ===== */
+        .media-hint { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: -5px; margin-bottom: 10px; }
+        .media-dropzone {
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 26px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+            background: rgba(255,255,255,0.02);
+        }
+        .media-dropzone:hover, .media-dropzone.dragover {
+            border-color: #CEE7E6;
+            background: rgba(206,231,230,0.06);
+        }
+        .media-dropzone i { font-size: 28px; color: #CEE7E6; margin-bottom: 8px; display: block; }
+        .media-dropzone-text { color: #fff; font-size: 14px; }
+        .media-dropzone-text span { color: #CEE7E6; text-decoration: underline; }
+        .media-dropzone-sub { color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 4px; }
+
+        .media-url-row { display: flex; gap: 8px; margin-top: 10px; }
+        .media-url-row input {
+            flex: 1;
+            padding: 10px; background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .media-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: #000;
+            cursor: grab;
+        }
+        .media-item.is-cover { border-color: #CEE7E6; box-shadow: 0 0 0 2px rgba(206,231,230,0.4); }
+        .media-item.dragging { opacity: .4; }
+        .media-item img, .media-item video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .media-item .cover-badge {
+            position: absolute; top: 6px; left: 6px;
+            background: #CEE7E6; color: #000;
+            font-size: 9px; font-weight: bold;
+            padding: 2px 7px; border-radius: 8px; letter-spacing: .5px;
+        }
+        .media-item .media-remove {
+            position: absolute; top: 5px; right: 5px;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(0,0,0,0.65); color: #fff; border: none;
+            cursor: pointer; font-size: 13px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity .2s;
+        }
+        .media-item:hover .media-remove { opacity: 1; }
+        .media-item .set-cover {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.65); color: #fff;
+            border: none; cursor: pointer; font-size: 10px;
+            padding: 5px; opacity: 0; transition: opacity .2s;
+        }
+        .media-item:hover .set-cover { opacity: 1; }
+        .media-empty { color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 12px; text-align: center; }
+    </style>
+</head>
+<body class="admin-body" style="display: none;">
+
+    <!-- Sidebar Injetada -->
+    <aside class="admin-sidebar"></aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1 class="admin-title">Gestão de Produtos</h1>
+            <div style="display: flex; gap: 10px;">
+                <button class="admin-btn secondary" onclick="document.getElementById('categoryModal').classList.add('active')"><i class="fa-solid fa-layer-group"></i> Nova Categoria</button>
+                <button class="admin-btn primary" id="openProductModalBtn"><i class="fa-solid fa-plus"></i> Novo Produto</button>
+            </div>
+        </header>
+
+        <div class="admin-card">
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <input type="text" id="searchProduct" placeholder="Pesquisar produtos (digite e tecle Enter)..." style="padding: 10px; width: 350px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 5px;" onkeyup="filterTable(event)">
+                <select style="padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 5px;">
+                    <option value="">Todas Categorias</option>
+                    <option value="iphone">iPhones</option>
+                    <option value="mac">Macs</option>
+                    <option value="jbl">JBL</option>
+                </select>
+            </div>
+
+            <div class="admin-table-container">
+                <table class="admin-table" id="productTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Produto</th>
+                            <th>Categorias</th>
+                            <th>Preço</th>
+                            <th>Estoque</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <tr><td colspan="6" style="text-align:center;">Carregando produtos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-card" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #fff; font-size: 18px;">Gestão de Categorias</h2>
+                <button class="admin-btn secondary" onclick="document.getElementById('categoryModal').classList.add('active')"><i class="fa-solid fa-plus"></i> Nova Categoria</button>
+            </div>
+            
+            <div class="admin-table-container">
+                <table class="admin-table" id="categoryTable">
+                    <thead>
+                        <tr>
+                            <th>Nome da Categoria</th>
+                            <th>Qtd. Produtos</th>
+                            <th style="width: 100px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                        <tr><td colspan="3" style="text-align:center;">Carregando categorias...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sessão Organizacional de Produtos por Categoria (Com Controle de Ocultação de Informações) -->
+        <div class="admin-card" id="cat-explorer" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 15px;">
+                <div>
+                    <h2 style="color: #fff; font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-layer-group" style="color: #CEE7E6;"></i> Produtos por Categoria
+                    </h2>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin: 4px 0 0 0;">
+                        Visualize os produtos agrupados por cada categoria e controle o que exibir ou ocultar.
+                    </p>
+                </div>
+
+                <!-- Painel de Controle de Ocultação de Informações -->
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="admin-btn secondary" id="btnTogglePrices" onclick="toggleInfoVisibility('prices')" style="font-size: 12px; padding: 6px 12px;">
+                        <i class="fa-solid fa-eye"></i> Preços: <b style="color: #34c759;" id="lblPriceState">Visíveis</b>
+                    </button>
+                    <button class="admin-btn secondary" id="btnToggleDesc" onclick="toggleInfoVisibility('desc')" style="font-size: 12px; padding: 6px 12px;">
+                        <i class="fa-solid fa-eye"></i> Descrição: <b style="color: #34c759;" id="lblDescState">Visível</b>
+                    </button>
+                    <button class="admin-btn secondary" id="btnToggleTags" onclick="toggleInfoVisibility('tags')" style="font-size: 12px; padding: 6px 12px;">
+                        <i class="fa-solid fa-eye"></i> Tags: <b style="color: #34c759;" id="lblTagState">Visíveis</b>
+                    </button>
+                </div>
+            </div>
+
+            <div id="categoryExplorerContainer">
+                <p style="color: rgba(255,255,255,0.4); text-align: center; padding: 20px;">Carregando produtos por categoria...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Novo Produto (Live Preview + Tags + FAQ) -->
+    <div class="admin-modal-overlay" id="productModal">
+        <div class="admin-modal wide">
+            <div class="admin-modal-header">
+                <h2>Cadastrar Produto</h2>
+                <button class="admin-modal-close" id="closeProductModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-split">
+                <div class="modal-split-left">
+                    <form id="productForm">
+                        <div class="admin-form-group checkbox-group" style="background: rgba(255, 215, 0, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 215, 0, 0.3);">
+                            <label><input type="checkbox" id="pStar" onchange="updatePreview()"> ⭐ Marcar como Produto Estrela (Maior destaque na loja)</label>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>Nome do Produto</label>
+                            <input type="text" id="pName" placeholder="Ex: iPhone 17 Pro" onkeyup="updatePreview()">
+                        </div>
+                        
+                        <div class="admin-form-group">
+                            <label>Categorias</label>
+                            <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: -5px; margin-bottom: 10px;">Selecione uma ou mais categorias para este produto.</p>
+                            <div id="pCatCheckboxes" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="iPhones"> iPhones</label>
+                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="Macs"> Macs</label>
+                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="JBL"> JBL</label>
+                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="Playstation"> Playstation</label>
+                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="Hollyland"> Hollyland</label>
+                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="Outros"> Outros</label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px;">
+                            <div class="admin-form-group" style="flex:1;">
+                                <label>Preço "De" (R$)</label>
+                                <input type="number" id="pOldPrice" placeholder="Ex: 10000.00" onkeyup="updatePreview()">
+                            </div>
+                            <div class="admin-form-group" style="flex:1;">
+                                <label>Preço "Por" (R$)</label>
+                                <input type="number" id="pPrice" placeholder="Ex: 8500.00" onkeyup="updatePreview()">
+                            </div>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>Mídias do Produto (Galeria)</label>
+                            <p class="media-hint">Envie as imagens do produto. Arraste para reordenar — a <strong>primeira imagem é a capa</strong>. Também é possível adicionar por URL (útil para vídeos).</p>
+
+                            <div id="mediaDropzone" class="media-dropzone">
+                                <input type="file" id="mediaFileInput" accept="image/*,video/mp4,video/webm" multiple hidden>
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <div class="media-dropzone-text">Arraste imagens aqui ou <span>clique para enviar</span></div>
+                                <div class="media-dropzone-sub">PNG, JPG, WEBP — várias de uma vez</div>
+                            </div>
+
+                            <div class="media-url-row">
+                                <input type="text" id="mediaUrlInput" placeholder="Colar URL de imagem ou vídeo (.mp4)..." onkeydown="if(event.key==='Enter'){event.preventDefault();addMediaByUrl();}">
+                                <button type="button" class="admin-btn secondary" onclick="addMediaByUrl()">Adicionar URL</button>
+                            </div>
+
+                            <div id="mediaGrid" class="media-grid"></div>
+                        </div>
+
+                        <!-- Opções Dinâmicas (Tags) -->
+                        <div class="dynamic-options-container">
+                            <h4 style="margin-top: 0; margin-bottom: 10px; color: #fff;">Opções Dinâmicas</h4>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" onchange="toggleOption('color', this.checked)"> Cor</label>
+                                <label><input type="checkbox" onchange="toggleOption('size', this.checked)"> Tamanho</label>
+                                <label><input type="checkbox" onchange="toggleOption('model', this.checked)"> Modelo</label>
+                            </div>
+
+                            <div id="opt-color" class="option-input-area">
+                                <label>Adicione as Cores (Pressione Enter para adicionar)</label>
+                                <div style="margin-bottom:8px; display:none;"><span style="font-size:11px; color:rgba(255,255,255,0.4); vertical-align:middle;">Sugestões: </span><span id="suggestedColorPills"></span></div>
+                                <input type="text" placeholder="Ex: Preto Titânio" onkeydown="addTag(event, 'colorTags')">
+                                <div id="colorTags"></div>
+                            </div>
+                            <div id="opt-size" class="option-input-area">
+                                <label>Adicione os Tamanhos/Armazenamento (Enter)</label>
+                                <div style="margin-bottom:8px; display:none;"><span style="font-size:11px; color:rgba(255,255,255,0.4); vertical-align:middle;">Sugestões: </span><span id="suggestedSizePills"></span></div>
+                                <input type="text" placeholder="Ex: 256GB" onkeydown="addTag(event, 'sizeTags')">
+                                <div id="sizeTags"></div>
+                            </div>
+                            <div id="opt-model" class="option-input-area">
+                                <label>Adicione os Modelos (Enter)</label>
+                                <div style="margin-bottom:8px; display:none;"><span style="font-size:11px; color:rgba(255,255,255,0.4); vertical-align:middle;">Sugestões: </span><span id="suggestedModelPills"></span></div>
+                                <input type="text" placeholder="Ex: Pro Max" onkeydown="addTag(event, 'modelTags')">
+                                <div id="modelTags"></div>
+                            </div>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>Descrição Detalhada</label>
+                            <textarea rows="4" id="pDesc" placeholder="Detalhes do produto..." onkeyup="updatePreview()"></textarea>
+                        </div>
+
+                        <!-- FAQ -->
+                        <div class="dynamic-options-container">
+                            <h4 style="margin-top: 0; margin-bottom: 10px; color: #fff;">Perguntas Frequentes (FAQ)</h4>
+                            <div class="admin-form-group">
+                                <label>Pergunta 1</label>
+                                <input type="text" placeholder="Ex: Qual a garantia?">
+                            </div>
+                            <div class="admin-form-group">
+                                <label>Resposta 1</label>
+                                <input type="text" placeholder="Garantia Apple de 1 ano.">
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-split-right">
+                    <div class="live-preview-header">
+                        VISÃO DO CLIENTE NO SITE
+                    </div>
+                    <div class="live-preview-content">
+                        <div class="preview-img-box">
+                            <i class="fa-solid fa-image" id="prevIcon"></i>
+                            <img src="" id="prevImg" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:15px;">
+                            <video id="prevVideo" autoplay loop muted playsinline style="display:none; width:100%; height:100%; object-fit:cover; border-radius:15px;"></video>
+                            <div class="preview-tags">
+                            <div id="prevStarBadge" style="position: absolute; top: 10px; left: 10px; background: #FFD700; color:#000; font-size:10px; font-weight:bold; padding: 3px 8px; border-radius: 10px; display:none;">ESTRELA</div>
+                        </div>
+                        </div>
+                        <div class="preview-title" id="prevTitle">Nome do Produto</div>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <div class="preview-price" id="prevPrice" style="margin-bottom: 0;">R$ 0,00</div>
+                            <div id="prevOldPrice" style="color: #ff4d4d; text-decoration: line-through; font-size: 14px; display: none;"></div>
+                            <div id="prevDiscount" style="background: #4CAF50; color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 5px; display: none;"></div>
+                        </div>
+                        
+                        <div id="prevTags" style="margin-bottom: 20px;"></div>
+
+                        <div class="preview-desc" id="prevDesc">A descrição detalhada do seu produto aparecerá aqui...</div>
+                        <div class="preview-buy-btn">Adicionar ao Carrinho</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="admin-btn secondary" id="cancelProductBtn">Cancelar</button>
+                <button type="button" class="admin-btn primary" id="saveProductBtn" onclick="salvarProduto()">Salvar Produto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova Categoria -->
+    <div class="admin-modal-overlay" id="categoryModal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h2>Nova Categoria</h2>
+                <button class="admin-modal-close" onclick="document.getElementById('categoryModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="newCategoryForm">
+                <div class="admin-form-group">
+                    <label>Nome da Categoria</label>
+                    <input type="text" id="newCatName" placeholder="Ex: Acessórios">
+                </div>
+                <div class="admin-form-group" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="menuCheckbox" style="width: auto;">
+                    <label for="menuCheckbox" style="margin: 0;">Mostrar no Menu Superior do Site</label>
+                </div>
+                <p style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: -10px; margin-bottom: 20px;">Nota: O menu superior tem limite de espaço. Se adicionar, ele substituirá o último item se estiver cheio.</p>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="button" class="admin-btn primary" onclick="saveNewCategory()">Criar Categoria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Categorias do Produto -->
+    <div class="admin-modal-overlay" id="editProductCatModal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h2>Definir Categorias do Produto</h2>
+                <button class="admin-modal-close" onclick="document.getElementById('editProductCatModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="admin-form-group">
+                <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 15px;">Selecione em quais categorias este produto deve aparecer:</p>
+                <div id="editCatCheckboxes" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+                <input type="hidden" id="editCatProductId">
+                <button type="button" class="admin-btn primary" id="saveEditCatBtn" onclick="saveProductCategories()">Salvar Categorias</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="loja-api.js?v=14"></script>
+    <script>
+        // Precisa bater exatamente com a categoria que vem do catálogo, senão o
+        // agrupamento cria uma caixa duplicada e vazia ao lado da de verdade.
+        const DEFAULT_CATEGORIES = ['iPhones', 'iPads', 'Macs', 'Caixas de Som', 'Acessórios'];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadCategories();
+            await renderTable();
+        });
+
+        function loadCategories() {
+            let cats = JSON.parse(localStorage.getItem('adminCategories'));
+            if(!cats || cats.length === 0) cats = DEFAULT_CATEGORIES;
+            
+            const container = document.getElementById('pCatCheckboxes');
+            const editContainer = document.getElementById('editCatCheckboxes');
+            if(container) container.innerHTML = '';
+            if(editContainer) editContainer.innerHTML = '';
+
+            const categoryTableBody = document.getElementById('categoryTableBody');
+            if(categoryTableBody) categoryTableBody.innerHTML = '';
+
+            cats.forEach(c => {
+                if(container) {
+                    container.innerHTML += `<label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="${c}" onchange="updateCategorySuggestions()"> ${c}</label>`;
+                }
+                if(editContainer) {
+                    editContainer.innerHTML += `<label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" value="${c}"> ${c}</label>`;
+                }
+                
+                // Categoria na tabela
+                if(categoryTableBody) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${c}</td>
+                        <td id="cat-count-${c.replace(/\s+/g, '-')}">Carregando...</td>
+                        <td style="text-align: center;">
+                            <button class="admin-btn secondary" style="padding: 5px 10px; font-size: 12px; color: #ff4d4d;" title="Excluir Categoria" onclick="deleteCategory('${c}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    `;
+                    categoryTableBody.appendChild(tr);
+                }
+            });
+        }
+
+        async function deleteCategory(catName) {
+            if(confirm(`Atenção: Excluir a categoria "${catName}" removerá todos os produtos associados a ela desta categoria. Deseja prosseguir?`)) {
+                let cats = JSON.parse(localStorage.getItem('adminCategories')) || DEFAULT_CATEGORIES;
+                cats = cats.filter(c => c !== catName);
+                localStorage.setItem('adminCategories', JSON.stringify(cats));
+                
+                // Update products in the catalog that use this category (linhas cruas)
+                const products = await LojaAPI.getAllProductsAdmin();
+                const affectedProducts = products.filter(p => p.category && p.category.includes(catName));
+                
+                for(let p of affectedProducts) {
+                    let catArray = p.category.split(',').map(s => s.trim()).filter(s => s !== catName);
+                    let newCategory = catArray.length > 0 ? catArray.join(', ') : 'Geral';
+                    await LojaAPI.updateProduct(p.id, { category: newCategory });
+                }
+                
+                loadCategories();
+                await renderTable();
+                alert(`Categoria "${catName}" excluída com sucesso!`);
+            }
+        }
+
+        function saveNewCategory() {
+            const name = document.getElementById('newCatName').value.trim();
+            if(!name) return alert('Digite um nome!');
+            
+            let cats = JSON.parse(localStorage.getItem('adminCategories'));
+            if(!cats || cats.length === 0) cats = DEFAULT_CATEGORIES;
+            
+            if(!cats.includes(name)) {
+                cats.push(name);
+                localStorage.setItem('adminCategories', JSON.stringify(cats));
+                loadCategories();
+                alert(`Categoria "${name}" criada com sucesso! Ela já aparece na lista de caixinhas ao criar um produto.`);
+            } else {
+                alert('Esta categoria já existe!');
+            }
+            document.getElementById('newCatName').value = '';
+            document.getElementById('categoryModal').classList.remove('active');
+        }
+
+        async function renderTable() {
+            const tbody = document.getElementById('productTableBody');
+            // Admin trabalha com as linhas CRUAS (todas, incl. rascunhos, sem
+            // agrupar por modelo) — cada variante é uma linha editável.
+            let products;
+            try {
+                products = await LojaAPI.getAllProductsAdmin();
+            } catch (e) {
+                products = [];
+            }
+            window._produtos = products; // guarda para o modal de edição
+
+            if(!products || products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhum produto cadastrado (ou sessão expirada — entre novamente).</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+
+            // Map category counts (só conta os publicados)
+            const catCounts = {};
+
+            // Capacidade a partir da descrição, pra distinguir variantes do mesmo modelo.
+            const capacidadeDe = (p) => {
+                const m = (p.description || '').match(/(\d+\s*(?:GB|TB))/i);
+                return m ? ' · ' + m[1].toUpperCase().replace(/\s+/g,'') : '';
+            };
+
+            products.forEach(p => {
+                if(p.category && p.status === 'published') {
+                    p.category.split(',').forEach(c => {
+                        let cName = c.trim();
+                        catCounts[cName] = (catCounts[cName] || 0) + 1;
+                    });
+                }
+
+                const publicado = p.status === 'published';
+                const statusBadge = publicado
+                    ? '<span style="color:#4CAF50; font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> No ar</span>'
+                    : '<span style="color:#FFB300; font-weight:600;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Oculto</span>';
+                const toggleBtn = publicado
+                    ? `<button class="admin-btn secondary" style="padding:5px 10px; font-size:12px;" title="Ocultar do site" onclick="togglePublicar('${p.id}','draft')"><i class="fa-solid fa-eye-slash"></i></button>`
+                    : `<button class="admin-btn secondary" style="padding:5px 10px; font-size:12px; color:#4CAF50;" title="Publicar no site" onclick="togglePublicar('${p.id}','published')"><i class="fa-solid fa-eye"></i></button>`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'product-row';
+                if (!publicado) tr.style.opacity = '0.6';
+                tr.innerHTML = `
+                    <td>${p.id ? p.id.substring(0,8) : 'N/A'}...</td>
+                    <td class="p-name">${p.name}<span style="color:rgba(255,255,255,0.4);">${capacidadeDe(p)}</span></td>
+                    <td>${p.category || 'Geral'}</td>
+                    <td>${parseFloat(p.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td>${statusBadge}</td>
+                    <td style="white-space:nowrap;">
+                        ${toggleBtn}
+                        <button class="admin-btn secondary" style="padding: 5px 10px; font-size: 12px;" title="Editar Produto" onclick="abrirEdicaoProduto('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="admin-btn secondary" style="padding: 5px 10px; font-size: 12px; color: #ff4d4d;" title="Remover" onclick="removerProduto('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update Category Counts
+            document.querySelectorAll('[id^="cat-count-"]').forEach(el => {
+                const catName = el.id.replace('cat-count-', '').replace(/-/g, ' ');
+                el.innerText = catCounts[catName] || 0;
+            });
+
+            // Renderizar a Sessão de Produtos por Categoria (Com Ocultação)
+            renderCategoryExplorer(products);
+        }
+
+        // ==========================================
+        // PRODUTOS POR CATEGORIA (SESSÃO ORGANIZACIONAL)
+        // ==========================================
+        let infoSettings = JSON.parse(localStorage.getItem('admin_info_settings') || '{"prices": true, "desc": true, "tags": true}');
+        let hiddenProducts = JSON.parse(localStorage.getItem('admin_hidden_products') || '[]');
+        let hiddenCategories = JSON.parse(localStorage.getItem('admin_hidden_categories') || '[]');
+
+        function updateInfoToggleLabels() {
+            const lblPrice = document.getElementById('lblPriceState');
+            const lblDesc = document.getElementById('lblDescState');
+            const lblTag = document.getElementById('lblTagState');
+
+            if (lblPrice) {
+                lblPrice.textContent = infoSettings.prices ? 'Visíveis' : 'Ocultos';
+                lblPrice.style.color = infoSettings.prices ? '#34c759' : '#ff4d4d';
+            }
+            if (lblDesc) {
+                lblDesc.textContent = infoSettings.desc ? 'Visível' : 'Oculta';
+                lblDesc.style.color = infoSettings.desc ? '#34c759' : '#ff4d4d';
+            }
+            if (lblTag) {
+                lblTag.textContent = infoSettings.tags ? 'Visíveis' : 'Ocultas';
+                lblTag.style.color = infoSettings.tags ? '#34c759' : '#ff4d4d';
+            }
+        }
+
+        function toggleInfoVisibility(type) {
+            infoSettings[type] = !infoSettings[type];
+            localStorage.setItem('admin_info_settings', JSON.stringify(infoSettings));
+            updateInfoToggleLabels();
+            if (window.cachedProducts) renderCategoryExplorer(window.cachedProducts);
+        }
+
+        function toggleProductHide(productId) {
+            productId = String(productId);
+            const index = hiddenProducts.indexOf(productId);
+            if (index > -1) {
+                hiddenProducts.splice(index, 1);
+            } else {
+                hiddenProducts.push(productId);
+            }
+            localStorage.setItem('admin_hidden_products', JSON.stringify(hiddenProducts));
+            
+            let overrides = JSON.parse(localStorage.getItem('produtoOverrides') || '{}');
+            if (!overrides[productId]) overrides[productId] = {};
+            overrides[productId].hidden = hiddenProducts.includes(productId);
+            localStorage.setItem('produtoOverrides', JSON.stringify(overrides));
+
+            if (window.cachedProducts) renderCategoryExplorer(window.cachedProducts);
+        }
+
+        function toggleCatVisibility(catName) {
+            const index = hiddenCategories.indexOf(catName);
+            if (index > -1) {
+                hiddenCategories.splice(index, 1);
+            } else {
+                hiddenCategories.push(catName);
+            }
+            localStorage.setItem('admin_hidden_categories', JSON.stringify(hiddenCategories));
+            if (window.cachedProducts) renderCategoryExplorer(window.cachedProducts);
+        }
+
+        function renderCategoryExplorer(products) {
+            window.cachedProducts = products;
+            updateInfoToggleLabels();
+            const container = document.getElementById('categoryExplorerContainer');
+            if (!container) return;
+
+            const categoryMap = {};
+            const defaultCats = JSON.parse(localStorage.getItem('adminCategories')) || DEFAULT_CATEGORIES;
+            defaultCats.forEach(c => categoryMap[c] = []);
+            if (!categoryMap['Geral']) categoryMap['Geral'] = [];
+
+            products.forEach(prod => {
+                const catStr = prod.category || 'Geral';
+                const cats = catStr.split(',').map(c => c.trim());
+                cats.forEach(c => {
+                    if (!categoryMap[c]) categoryMap[c] = [];
+                    categoryMap[c].push(prod);
+                });
+            });
+
+            container.innerHTML = '';
+
+            Object.keys(categoryMap).forEach((catName, index) => {
+                const catProducts = categoryMap[catName];
+                if (catProducts.length === 0 && !defaultCats.includes(catName)) return;
+
+                const isCatHidden = hiddenCategories.includes(catName);
+
+                const catCard = document.createElement('div');
+                catCard.style.marginBottom = '20px';
+                catCard.style.background = 'rgba(255,255,255,0.03)';
+                catCard.style.border = '1px solid rgba(255,255,255,0.08)';
+                catCard.style.borderRadius = '12px';
+                catCard.style.padding = '18px';
+
+                catCard.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="const b=document.getElementById('cat-body-${index}'); const a=document.getElementById('cat-arrow-${index}'); if(b.style.display==='none'){b.style.display='block'; a.style.transform='rotate(0deg)';}else{b.style.display='none'; a.style.transform='rotate(-90deg)';}">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <i class="fa-solid fa-folder-open" style="color:#CEE7E6; font-size:20px;"></i>
+                            <h3 style="margin:0; color:#fff; font-size:18px;">${catName}</h3>
+                            <span style="background:rgba(206,231,230,0.15); color:#CEE7E6; font-size:11px; padding:3px 10px; border-radius:12px; font-weight:600;">${catProducts.length} Produtos</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button class="admin-btn secondary" style="padding:4px 10px; font-size:12px;" onclick="event.stopPropagation(); toggleCatVisibility('${catName}')">
+                                <i class="fa-solid ${isCatHidden ? 'fa-eye-slash' : 'fa-eye'}"></i> ${isCatHidden ? 'Categoria Ocultada' : 'Categoria Visível'}
+                            </button>
+                            <i class="fa-solid fa-chevron-down" id="cat-arrow-${index}" style="color:rgba(255,255,255,0.6); transition:transform 0.3s;"></i>
+                        </div>
+                    </div>
+
+                    <div id="cat-body-${index}" style="display:block; margin-top:20px; border-top:1px solid rgba(255,255,255,0.06); padding-top:20px;">
+                        ${catProducts.length === 0 ? '<p style="color:rgba(255,255,255,0.4); margin:0; text-align:center; padding:10px;">Nenhum produto cadastrado nesta categoria.</p>' : ''}
+                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:15px;">
+                            ${catProducts.map(p => {
+                                const isHidden = hiddenProducts.includes(String(p.id));
+                                const mainImg = p.image || LojaAPI.getSmartProductImage(p);
+                                const priceFormatted = parseFloat(p.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                                return `
+                                    <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:15px; display:flex; flex-direction:column; gap:10px; position:relative; ${isHidden ? 'opacity:0.55;' : ''}">
+                                        <div style="display:flex; gap:12px; align-items:center;">
+                                            <img src="${mainImg}" alt="${p.name}" style="width:52px; height:52px; object-fit:contain; border-radius:6px; background:rgba(255,255,255,0.05); padding:4px;">
+                                            <div style="flex:1; overflow:hidden;">
+                                                <div style="font-weight:bold; color:#fff; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
+                                                <div style="font-size:12px; color:#34c759; font-weight:600; margin-top:2px; display:${infoSettings.prices ? 'block' : 'none'};">${priceFormatted}</div>
+                                            </div>
+                                        </div>
+
+                                        <p style="font-size:11px; color:rgba(255,255,255,0.6); margin:0; line-height:1.4; display:${infoSettings.desc ? 'block' : 'none'};">
+                                            ${p.description ? p.description.substring(0, 60) + '...' : 'Sem descrição cadastrada.'}
+                                        </p>
+
+                                        ${p.tags && p.tags.length > 0 && infoSettings.tags ? `
+                                            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;">
+                                                ${p.tags.slice(0, 4).map(t => `<span style="font-size:9px; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; color:#CEE7E6;">${t}</span>`).join('')}
+                                            </div>
+                                        ` : ''}
+
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+                                            <span style="font-size:10px; color:${isHidden ? '#ff4d4d' : '#34c759'}; font-weight:600;">
+                                                <i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-circle-check'}"></i> ${isHidden ? 'Oculto' : 'Visível'}
+                                            </span>
+                                            <button class="admin-btn secondary" style="padding:3px 8px; font-size:11px;" onclick="toggleProductHide('${p.id}')">
+                                                <i class="fa-solid ${isHidden ? 'fa-eye' : 'fa-eye-slash'}"></i> ${isHidden ? 'Mostrar' : 'Ocultar'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(catCard);
+            });
+        }
+
+        function openEditProductCategoriesModal(productId, currentCategories) {
+            document.getElementById('editCatProductId').value = productId;
+            const checkboxes = document.querySelectorAll('#editCatCheckboxes input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = currentCategories.includes(cb.value);
+            });
+            document.getElementById('editProductCatModal').classList.add('active');
+        }
+
+        async function saveProductCategories() {
+            const btn = document.getElementById('saveEditCatBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            const productId = document.getElementById('editCatProductId').value;
+            const catBoxes = document.querySelectorAll('#editCatCheckboxes input[type="checkbox"]:checked');
+            const selectedCats = Array.from(catBoxes).map(cb => cb.value);
+            const categoryValue = selectedCats.length > 0 ? selectedCats.join(', ') : 'Geral';
+
+            try {
+                await LojaAPI.updateProduct(productId, { category: categoryValue });
+                document.getElementById('editProductCatModal').classList.remove('active');
+                await renderTable();
+            } catch(err) {
+                alert('Erro ao atualizar categorias do produto.');
+            } finally {
+                btn.innerHTML = 'Salvar Categorias';
+                btn.disabled = false;
+            }
+        }
+
+        const modal = document.getElementById('productModal');
+        const openBtn = document.getElementById('openProductModalBtn');
+        const closeBtn = document.getElementById('closeProductModalBtn');
+        const cancelBtn = document.getElementById('cancelProductBtn');
+
+        if(openBtn) openBtn.addEventListener('click', () => modal.classList.add('active'));
+        if(closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+        if(cancelBtn) cancelBtn.addEventListener('click', () => modal.classList.remove('active'));
+        
+        modal.addEventListener('click', (e) => {
+            if(e.target === modal) modal.classList.remove('active');
+        });
+
+        async function salvarProduto() {
+            const btn = document.getElementById('saveProductBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            const name = document.getElementById('pName').value || 'Sem Nome';
+            const price = parseFloat(document.getElementById('pPrice').value) || 0;
+            const oldPrice = parseFloat(document.getElementById('pOldPrice').value) || 0;
+            const desc = document.getElementById('pDesc').value || '';
+            const isStar = document.getElementById('pStar').checked;
+            
+            const mediaArray = (window.productMedia || []).map(m => m.src);
+
+            // Pegar categorias selecionadas
+            const catBoxes = document.querySelectorAll('#pCatCheckboxes input[type="checkbox"]:checked');
+            const selectedCats = Array.from(catBoxes).map(cb => cb.value);
+            const categoryValue = selectedCats.length > 0 ? selectedCats.join(', ') : 'Geral';
+
+            const tags = Array.from(document.querySelectorAll('.tag-pill')).map(t => t.innerText.trim());
+
+            try {
+                if (window.editingProductId) {
+                    // Modo edição: atualiza o produto existente. A imagem só é
+                    // enviada se o admin mexeu na galeria (senão mantém a atual).
+                    const updates = { name, price, description: desc, category: categoryValue, isStar, tags };
+                    if (mediaArray.length > 0) updates.images = mediaArray;
+                    const result = await LojaAPI.updateProduct(window.editingProductId, updates);
+                    console.log('Produto atualizado:', result);
+                    alert('Alterações salvas!');
+                } else {
+                    const result = await LojaAPI.createProduct({
+                        name, price, oldPrice, description: desc, category: categoryValue, isStar, tags,
+                        images: mediaArray.length > 0 ? mediaArray : null
+                    });
+                    console.log('Produto salvo:', result);
+                    alert('Sucesso! Produto cadastrado.');
+                }
+                window.editingProductId = null;
+                modal.classList.remove('active');
+                window.location.reload(); // Recarrega para ver na tabela
+            } catch(err) {
+                alert('Erro ao salvar o produto.');
+            } finally {
+                btn.innerHTML = 'Salvar Produto';
+                btn.disabled = false;
+            }
+        }
+
+        // Abre o modal já preenchido com os dados do produto para edição.
+        window.editingProductId = null;
+        window.abrirEdicaoProduto = function(id) {
+            const prod = (window._produtos || []).find(p => String(p.id) === String(id));
+            if (!prod) { alert('Produto não encontrado. Recarregue a página.'); return; }
+            window.editingProductId = id;
+
+            document.getElementById('pName').value = prod.name || '';
+            document.getElementById('pPrice').value = prod.price != null ? prod.price : '';
+            document.getElementById('pOldPrice').value = '';
+            document.getElementById('pDesc').value = prod.description || '';
+            document.getElementById('pStar').checked = !!prod.isStar;
+
+            const cats = (prod.category || '').split(',').map(s => s.trim());
+            document.querySelectorAll('#pCatCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = cats.includes(cb.value);
+            });
+
+            // Galeria: carrega a imagem cadastrada (linha crua tem `image`).
+            // Vazia quando o produto usa a foto automática do modelo.
+            const imgs = prod.image ? [prod.image] : (prod.images || []);
+            window.productMedia = imgs.filter(Boolean).map(src => ({ src, type: 'image' }));
+            if (typeof renderMediaGrid === 'function') renderMediaGrid();
+
+            // Limpa as pílulas de opções (cores/tamanhos) do formulário.
+            document.querySelectorAll('.tag-pill').forEach(t => t.remove());
+
+            const h2 = modal.querySelector('.admin-modal-header h2');
+            if (h2) h2.textContent = 'Editar Produto';
+            const sb = document.getElementById('saveProductBtn');
+            if (sb) sb.textContent = 'Salvar Alterações';
+
+            if (typeof updatePreview === 'function') updatePreview();
+            modal.classList.add('active');
+        };
+
+        // Publica ou oculta o produto (status published/draft) sem apagar nada.
+        window.togglePublicar = async function(id, novoStatus) {
+            try {
+                await LojaAPI.updateProduct(id, { status: novoStatus });
+                await renderTable();
+            } catch (e) {
+                alert('Não foi possível mudar o status. Tente de novo.');
+            }
+        };
+
+        // Remove o produto (com confirmação — é irreversível).
+        window.removerProduto = async function(id) {
+            const prod = (window._produtos || []).find(p => String(p.id) === String(id));
+            const nome = prod ? prod.name : 'este produto';
+            if (!confirm(`Remover "${nome}"? Essa ação não pode ser desfeita.`)) return;
+            try {
+                await LojaAPI.deleteProduct(id);
+                alert('Produto removido.');
+                window.location.reload();
+            } catch (e) {
+                alert('Erro ao remover o produto.');
+            }
+        };
+
+        function openCategoryModal() {
+            document.getElementById('categoryModal').classList.add('active');
+        }
+
+        // Live Search Filter
+        function filterTable(e) {
+            if(e.key === 'Enter') {
+                const query = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('.product-row');
+                rows.forEach(row => {
+                    const name = row.querySelector('.p-name').innerText.toLowerCase();
+                    if(name.includes(query)) row.style.display = '';
+                    else row.style.display = 'none';
+                });
+            }
+        }
+
+        // Dynamic Options (Tags) logic
+        function toggleOption(opt, checked) {
+            document.getElementById(`opt-${opt}`).classList.toggle('active', checked);
+        }
+
+        function addTag(e, containerId) {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                const val = e.target.value.trim();
+                if(val) {
+                    const container = document.getElementById(containerId);
+                    const pill = document.createElement('span');
+                    pill.className = 'tag-pill';
+                    pill.innerHTML = `${val} <span class="tag-remove" onclick="this.parentElement.remove(); updatePreview()"><i class="fa-solid fa-xmark"></i></span>`;
+                    container.appendChild(pill);
+                    e.target.value = '';
+                    updatePreview();
+                }
+            }
+        }
+
+        const categorySuggestions = {
+            'iPhone': {
+                models: ['Normal', 'Pro', 'Pro Max', 'Plus', 'Air'],
+                colors: ['Preto Titânio', 'Branco Titânio', 'Azul Titânio', 'Natural Titânio'],
+                sizes: ['128GB', '256GB', '512GB', '1TB']
+            },
+            'Macs': {
+                models: ['Air M4', 'Pro M4', 'Mini M4'],
+                colors: ['Cinza Espacial', 'Prata', 'Estelar', 'Meia-noite'],
+                sizes: ['8GB/256GB', '16GB/512GB', '24GB/1TB']
+            },
+            'JBL': {
+                models: ['PartyBox 520', 'PartyBox 720', 'Boombox 4', 'Go 4'],
+                colors: ['Preto', 'Azul', 'Preto Camuflado'],
+                sizes: ['Standard']
+            },
+            'Playstation': {
+                models: ['Slim', 'Pro', 'Digital'],
+                colors: ['Branco', 'Preto'],
+                sizes: ['1TB', '2TB']
+            },
+            'Hollyland': {
+                models: ['Lark M2', 'Lark Max'],
+                colors: ['Preto', 'Branco'],
+                sizes: ['Creator Combo']
+            }
+        };
+
+        function updateCategorySuggestions() {
+            const checkedBoxes = document.querySelectorAll('#pCatCheckboxes input[type="checkbox"]:checked');
+            const selectedCats = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            const modelSugContainer = document.getElementById('suggestedModelPills');
+            const colorSugContainer = document.getElementById('suggestedColorPills');
+            const sizeSugContainer = document.getElementById('suggestedSizePills');
+            
+            if (modelSugContainer) modelSugContainer.innerHTML = '';
+            if (colorSugContainer) colorSugContainer.innerHTML = '';
+            if (sizeSugContainer) sizeSugContainer.innerHTML = '';
+
+            let mergedModels = new Set();
+            let mergedColors = new Set();
+            let mergedSizes = new Set();
+
+            selectedCats.forEach(cat => {
+                const s = categorySuggestions[cat];
+                if (s) {
+                    s.models.forEach(m => mergedModels.add(m));
+                    s.colors.forEach(c => mergedColors.add(c));
+                    s.sizes.forEach(sz => mergedSizes.add(sz));
+                }
+            });
+
+            const renderPills = (set, container, tagContainerId) => {
+                if (!container) return;
+                if (set.size === 0) {
+                    container.parentElement.style.display = 'none';
+                    return;
+                }
+                container.parentElement.style.display = 'inline-block';
+                set.forEach(val => {
+                    const pill = document.createElement('span');
+                    pill.className = 'suggest-pill';
+                    pill.style.display = 'inline-block';
+                    pill.style.margin = '2px 4px';
+                    pill.style.padding = '3px 8px';
+                    pill.style.fontSize = '11px';
+                    pill.style.borderRadius = '4px';
+                    pill.style.background = 'rgba(255,255,255,0.08)';
+                    pill.style.border = '1px solid rgba(255,255,255,0.15)';
+                    pill.style.color = '#fff';
+                    pill.style.cursor = 'pointer';
+                    pill.style.transition = 'background 0.2s';
+                    pill.innerText = val;
+                    pill.onmouseover = () => pill.style.background = 'rgba(255,255,255,0.18)';
+                    pill.onmouseout = () => pill.style.background = 'rgba(255,255,255,0.08)';
+                    pill.onclick = () => {
+                        addTagDirectly(val, tagContainerId);
+                    };
+                    container.appendChild(pill);
+                });
+            };
+
+            renderPills(mergedModels, modelSugContainer, 'modelTags');
+            renderPills(mergedColors, colorSugContainer, 'colorTags');
+            renderPills(mergedSizes, sizeSugContainer, 'sizeTags');
+        }
+
+        function addTagDirectly(val, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const existing = Array.from(container.querySelectorAll('.tag-pill')).map(p => p.textContent.replace(/[^a-zA-Z0-9\/]/g, '').trim());
+            const cleanedVal = val.replace(/[^a-zA-Z0-9\/]/g, '').trim();
+            if (existing.includes(cleanedVal)) return;
+
+            const pill = document.createElement('span');
+            pill.className = 'tag-pill';
+            pill.innerHTML = `${val} <span class="tag-remove" onclick="this.parentElement.remove(); updatePreview()"><i class="fa-solid fa-xmark"></i></span>`;
+            container.appendChild(pill);
+            updatePreview();
+        }
+
+        // Live preview logic
+        function updatePreview() {
+            const name = document.getElementById('pName').value || 'Nome do Produto';
+            const rawPrice = parseFloat(document.getElementById('pPrice').value) || 0;
+            const rawOldPrice = parseFloat(document.getElementById('pOldPrice').value) || 0;
+            const desc = document.getElementById('pDesc').value || 'A descrição detalhada do seu produto aparecerá aqui...';
+            const isStar = document.getElementById('pStar').checked;
+            const firstMedia = (window.productMedia && window.productMedia[0]) ? window.productMedia[0] : null;
+
+            document.getElementById('prevTitle').innerText = name;
+            document.getElementById('prevDesc').innerText = desc;
+            document.getElementById('prevStarBadge').style.display = isStar ? 'block' : 'none';
+
+            const prevImg = document.getElementById('prevImg');
+            const prevVideo = document.getElementById('prevVideo');
+            const prevIcon = document.getElementById('prevIcon');
+
+            if (firstMedia) {
+                if(firstMedia.type === 'video') {
+                    prevVideo.src = firstMedia.src;
+                    prevVideo.style.display = 'block';
+                    prevImg.style.display = 'none';
+                } else {
+                    prevImg.src = firstMedia.src;
+                    prevImg.style.display = 'block';
+                    prevVideo.style.display = 'none';
+                }
+                prevIcon.style.display = 'none';
+            } else {
+                prevImg.style.display = 'none';
+                prevVideo.style.display = 'none';
+                prevIcon.style.display = 'block';
+            }
+            
+            // Format price
+            document.getElementById('prevPrice').innerText = rawPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            const oldPriceEl = document.getElementById('prevOldPrice');
+            const discountEl = document.getElementById('prevDiscount');
+            if(rawOldPrice > rawPrice && rawPrice > 0) {
+                oldPriceEl.style.display = 'block';
+                oldPriceEl.innerText = rawOldPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                
+                const percent = Math.round(((rawOldPrice - rawPrice) / rawOldPrice) * 100);
+                discountEl.style.display = 'block';
+                discountEl.innerText = `-${percent}%`;
+            } else {
+                oldPriceEl.style.display = 'none';
+                discountEl.style.display = 'none';
+            }
+
+            // Sync Tags to preview
+            const prevTags = document.getElementById('prevTags');
+            prevTags.innerHTML = '';
+            document.querySelectorAll('.tag-pill').forEach(pill => {
+                const text = pill.innerText;
+                const newPill = document.createElement('span');
+                newPill.style.cssText = 'display:inline-block; border:1px solid #CEE7E6; color:#CEE7E6; padding:3px 8px; border-radius:12px; font-size:10px; margin-right:5px; margin-bottom:5px;';
+                newPill.innerText = text;
+                prevTags.appendChild(newPill);
+            });
+        }
+    </script>
+
+    <!-- ===== Uploader de mídias estilo Shopify (upload + galeria + capa) ===== -->
+    <script>
+        window.productMedia = window.productMedia || [];
+
+        // Comprime a imagem no navegador (redimensiona + WebP) para reduzir o peso
+        function compressImage(file, maxDim = 1280, quality = 0.82) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let { width, height } = img;
+                        if (width > height && width > maxDim) {
+                            height = Math.round(height * maxDim / width); width = maxDim;
+                        } else if (height >= width && height > maxDim) {
+                            width = Math.round(width * maxDim / height); height = maxDim;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        let out;
+                        try {
+                            out = canvas.toDataURL('image/webp', quality);
+                            if (!out.startsWith('data:image/webp')) throw new Error('sem webp');
+                        } catch (_) {
+                            out = canvas.toDataURL('image/jpeg', quality);
+                        }
+                        resolve(out);
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function fileToDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = e => resolve(e.target.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        async function handleMediaFiles(files) {
+            for (const file of files) {
+                if (file.type.startsWith('image/')) {
+                    try {
+                        const src = await compressImage(file);
+                        window.productMedia.push({ src, type: 'image' });
+                    } catch (err) { console.error('Falha ao processar imagem', err); }
+                } else if (file.type.startsWith('video/')) {
+                    if (file.size > 6 * 1024 * 1024) {
+                        alert('Este vídeo é grande demais para upload direto. Adicione o vídeo por URL.');
+                        continue;
+                    }
+                    try {
+                        const src = await fileToDataURL(file);
+                        window.productMedia.push({ src, type: 'video' });
+                    } catch (err) { console.error('Falha ao processar vídeo', err); }
+                }
+            }
+            renderMediaGrid();
+            updatePreview();
+        }
+
+        function addMediaByUrl() {
+            const inp = document.getElementById('mediaUrlInput');
+            const url = (inp.value || '').trim();
+            if (!url) return;
+            const isVid = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+            window.productMedia.push({ src: url, type: isVid ? 'video' : 'image' });
+            inp.value = '';
+            renderMediaGrid();
+            updatePreview();
+        }
+
+        function reorderMedia(from, to) {
+            if (from === to || from == null) return;
+            const arr = window.productMedia;
+            const [item] = arr.splice(from, 1);
+            arr.splice(to, 0, item);
+            renderMediaGrid();
+            updatePreview();
+        }
+
+        function setCover(i) {
+            const arr = window.productMedia;
+            const [item] = arr.splice(i, 1);
+            arr.unshift(item);
+            renderMediaGrid();
+            updatePreview();
+        }
+
+        function removeMedia(i) {
+            window.productMedia.splice(i, 1);
+            renderMediaGrid();
+            updatePreview();
+        }
+
+        function renderMediaGrid() {
+            const grid = document.getElementById('mediaGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (!window.productMedia.length) {
+                grid.innerHTML = '<div class="media-empty">Nenhuma mídia adicionada ainda.</div>';
+                return;
+            }
+
+            window.productMedia.forEach((m, i) => {
+                const item = document.createElement('div');
+                item.className = 'media-item' + (i === 0 ? ' is-cover' : '');
+                item.draggable = true;
+                item.dataset.index = i;
+
+                const media = m.type === 'video'
+                    ? `<video src="${m.src}" muted></video>`
+                    : `<img src="${m.src}" alt="">`;
+
+                item.innerHTML = `
+                    ${media}
+                    ${i === 0 ? '<span class="cover-badge">CAPA</span>' : ''}
+                    <button type="button" class="media-remove" title="Remover">&times;</button>
+                    ${i !== 0 ? '<button type="button" class="set-cover">Tornar capa</button>' : ''}
+                `;
+
+                item.querySelector('.media-remove').onclick = (e) => { e.stopPropagation(); removeMedia(i); };
+                const sc = item.querySelector('.set-cover');
+                if (sc) sc.onclick = (e) => { e.stopPropagation(); setCover(i); };
+
+                item.addEventListener('dragstart', (e) => {
+                    item.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', i);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                item.addEventListener('dragend', () => item.classList.remove('dragging'));
+                item.addEventListener('dragover', (e) => e.preventDefault());
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                    reorderMedia(from, i);
+                });
+
+                grid.appendChild(item);
+            });
+        }
+
+        // Inicializa a área de upload (clique + arrastar/soltar)
+        (function initMediaUploader() {
+            const dz = document.getElementById('mediaDropzone');
+            const fi = document.getElementById('mediaFileInput');
+            if (!dz || !fi) return;
+
+            dz.addEventListener('click', () => fi.click());
+            fi.addEventListener('change', (e) => { handleMediaFiles(e.target.files); fi.value = ''; });
+
+            ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, (e) => {
+                e.preventDefault(); dz.classList.add('dragover');
+            }));
+            ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, (e) => {
+                e.preventDefault(); dz.classList.remove('dragover');
+            }));
+            dz.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files && files.length) handleMediaFiles(files);
+            });
+
+            // Ao abrir "Novo Produto", volta ao modo criação e limpa o formulário
+            const openBtn = document.getElementById('openProductModalBtn');
+            if (openBtn) openBtn.addEventListener('click', () => {
+                window.editingProductId = null;
+                const modalEl = document.getElementById('productModal');
+                const h2 = modalEl && modalEl.querySelector('.admin-modal-header h2');
+                if (h2) h2.textContent = 'Cadastrar Produto';
+                const sb = document.getElementById('saveProductBtn');
+                if (sb) sb.textContent = 'Salvar Produto';
+                ['pName','pPrice','pOldPrice','pDesc'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+                const star = document.getElementById('pStar'); if (star) star.checked = false;
+                document.querySelectorAll('#pCatCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.tag-pill').forEach(t => t.remove());
+                window.productMedia = [];
+                renderMediaGrid();
+                updatePreview();
+            });
+
+            renderMediaGrid();
+        })();
+    </script>
+</body>
+</html>

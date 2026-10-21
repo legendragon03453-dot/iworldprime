@@ -1,0 +1,49 @@
+{
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://*.doubleclick.net https://www.googleadservices.com https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.cdnfonts.com https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.cdnfonts.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://github.com https://raw.githubusercontent.com https://*.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://*.doubleclick.net https://www.google.com https://www.google.com.br https://google.com https://www.facebook.com https://connect.facebook.net; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://*.doubleclick.net https://www.googletagmanager.com https://www.google.com https://www.google.com.br https://google.com https://www.facebook.com https://connect.facebook.net; frame-src https://www.instagram.com https://www.googletagmanager.com https://*.doubleclick.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=()"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        }
+      ]
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
+}

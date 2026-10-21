@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing e Cupons - Admin iworldprime</title>
+    <link rel="stylesheet" href="admin-style.css?v=2">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-5" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="admin-auth.js?v=4"></script>
+    <script src="admin-sidebar.js?v=4"></script>
+    <script src="simulador.js?v=1"></script>
+    <style>
+        .pix-box { display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; }
+        .pix-box .campo { display:flex; flex-direction:column; gap:6px; }
+        .pix-box input { width:120px; padding:11px 12px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; border-radius:8px; font-size:15px; }
+        .cupom-badge { font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
+        .b-ativo { background:rgba(76,175,80,.15); color:#4CAF50; }
+        .b-inativo { background:rgba(255,255,255,.08); color:#9aa0aa; }
+        .acao-btn { padding:6px 10px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:#fff; cursor:pointer; margin-left:4px; }
+        .acao-btn:hover { background:rgba(255,255,255,0.1); }
+        .acao-btn.danger { color:#ff6b6b; }
+        .admin-form-group { margin-bottom:14px; }
+        .admin-form-group label { display:block; font-size:13px; margin-bottom:6px; color:rgba(255,255,255,0.75); }
+        .admin-form-group input, .admin-form-group select { width:100%; padding:11px 12px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; border-radius:8px; box-sizing:border-box; font-size:14px; }
+        .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    </style>
+</head>
+<body class="admin-body" style="display: none;">
+
+    <aside class="admin-sidebar"></aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1 class="admin-title">Marketing e Cupons</h1>
+            <button class="admin-btn primary" onclick="abrirModal()"><i class="fa-solid fa-plus"></i> Novo Cupom</button>
+        </header>
+
+        <!-- Desconto Pix -->
+        <div class="admin-card" style="margin-bottom:20px;">
+            <h3 style="margin-top:0;">Desconto no Pix</h3>
+            <p style="color:rgba(255,255,255,0.55); font-size:13px; margin-top:-4px;">Percentual mostrado nos preços do site e cobrado automaticamente quando o cliente escolhe pagar com Pix no checkout.</p>
+            <div class="pix-box">
+                <div class="campo">
+                    <label style="font-size:12px; color:rgba(255,255,255,0.6);">Desconto (%)</label>
+                    <input type="number" id="pixPct" min="0" max="90" step="1" value="10">
+                </div>
+                <button class="admin-btn primary" onclick="salvarPix()" id="btnPix"><i class="fa-solid fa-check"></i> Salvar desconto Pix</button>
+                <span id="pixMsg" style="font-size:13px;"></span>
+            </div>
+        </div>
+
+        <!-- Simulador de Troca: valores de avaliação -->
+        <div class="admin-card" style="margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h3 style="margin:0;">Simulador de Troca — Avaliação dos aparelhos</h3>
+                    <p style="color:rgba(255,255,255,0.55); font-size:13px; margin:4px 0 0;">Quanto a loja paga (dá de entrada) por cada iPhone usado. É o valor que aparece no simulador em <a href="/simulador" target="_blank" style="color:#CEE7E6;">/simulador</a>.</p>
+                </div>
+                <button class="admin-btn secondary" onclick="addLinhaAval()"><i class="fa-solid fa-plus"></i> Adicionar modelo</button>
+            </div>
+            <div class="admin-table-container" style="margin-top:14px;">
+                <table class="admin-table">
+                    <thead><tr><th>Modelo (como o cliente tem)</th><th style="width:180px;">Avaliação (R$)</th><th style="width:60px;"></th></tr></thead>
+                    <tbody id="avalTable"><tr><td colspan="3" style="text-align:center;color:rgba(255,255,255,0.4);padding:18px;">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; margin-top:14px;">
+                <button class="admin-btn primary" onclick="salvarAval()" id="btnAval"><i class="fa-solid fa-check"></i> Salvar tabela de avaliação</button>
+                <button class="admin-btn secondary" onclick="restaurarAval()" title="Voltar aos valores base sugeridos">Restaurar padrão</button>
+                <span id="avalMsg" style="font-size:13px;"></span>
+            </div>
+        </div>
+
+        <!-- Cupons -->
+        <div class="admin-card">
+            <h3 style="margin-top:0;">Cupons de Desconto</h3>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Desconto</th>
+                            <th>Mín. compra</th>
+                            <th>Validade</th>
+                            <th>Usos</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cupomTable">
+                        <tr><td colspan="7" style="text-align:center; color:rgba(255,255,255,0.4); padding:22px;">Carregando cupons...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal criar/editar -->
+    <div class="admin-modal-overlay" id="cupomModal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h2 id="modalTitulo">Novo Cupom</h2>
+                <button class="admin-modal-close" onclick="fecharModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="cupomForm">
+                <input type="hidden" id="cId">
+                <div class="admin-form-group">
+                    <label>Código do Cupom</label>
+                    <input type="text" id="cCode" placeholder="Ex: IWORLD20" required style="text-transform: uppercase;">
+                </div>
+                <div class="row2">
+                    <div class="admin-form-group">
+                        <label>Tipo de Desconto</label>
+                        <select id="cType">
+                            <option value="percent">Porcentagem (%)</option>
+                            <option value="fixo">Valor Fixo (R$)</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Valor do Desconto</label>
+                        <input type="number" id="cValue" placeholder="Ex: 10" step="0.01" required>
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="admin-form-group">
+                        <label>Compra mínima (R$) — opcional</label>
+                        <input type="number" id="cMin" placeholder="0" step="0.01">
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Validade — opcional</label>
+                        <input type="date" id="cValidade">
+                    </div>
+                </div>
+                <div class="admin-form-group">
+                    <label>Descrição — opcional</label>
+                    <input type="text" id="cDesc" placeholder="Ex: 10% em qualquer iPhone">
+                </div>
+                <div class="admin-form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="cAtivo" checked style="width:auto;"> Cupom ativo
+                    </label>
+                </div>
+                <div id="modalErro" style="color:#ff6b6b; font-size:13px; margin-bottom:10px; display:none;"></div>
+                <div style="display: flex; justify-content: flex-end; gap:10px;">
+                    <button type="button" class="admin-btn secondary" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="admin-btn primary" id="btnSalvar">Salvar cupom</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let CUPONS = [];
+
+        function tokenAdmin() {
+            try { const u = JSON.parse(localStorage.getItem('adminUser') || '{}'); return u && u.token ? u.token : ''; }
+            catch (e) { return ''; }
+        }
+        function hdr(extra) { return Object.assign({ 'X-Admin-Token': tokenAdmin() }, extra || {}); }
+        const moeda = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+        // ---------- Desconto Pix ----------
+        async function carregarPix() {
+            try {
+                const r = await fetch('/api/cupons?config=1');
+                const d = await r.json();
+                if (d && Number.isFinite(+d.desconto_pix)) document.getElementById('pixPct').value = +d.desconto_pix;
+            } catch (e) {}
+        }
+        async function salvarPix() {
+            const msg = document.getElementById('pixMsg');
+            const btn = document.getElementById('btnPix');
+            const v = parseFloat(document.getElementById('pixPct').value);
+            if (!Number.isFinite(v) || v < 0 || v > 90) { msg.style.color = '#ff6b6b'; msg.textContent = 'Use um valor de 0 a 90.'; return; }
+            btn.disabled = true; msg.style.color = 'rgba(255,255,255,0.6)'; msg.textContent = 'Salvando...';
+            try {
+                const r = await fetch('/api/cupons?config=1', { method: 'PATCH', headers: hdr({ 'Content-Type': 'application/json' }), body: JSON.stringify({ desconto_pix: v }) });
+                const d = await r.json();
+                if (r.ok) { msg.style.color = '#4CAF50'; msg.textContent = `Desconto Pix salvo: ${d.desconto_pix}%`; }
+                else { msg.style.color = '#ff6b6b'; msg.textContent = d.error || 'Erro ao salvar.'; }
+            } catch (e) { msg.style.color = '#ff6b6b'; msg.textContent = 'Falha de conexão.'; }
+            btn.disabled = false;
+        }
+
+        // ---------- Cupons ----------
+        async function carregarCupons() {
+            const tb = document.getElementById('cupomTable');
+            try {
+                const r = await fetch('/api/cupons', { headers: hdr(), cache: 'no-store' });
+                const d = await r.json();
+                if (!r.ok) { tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ff6b6b;padding:22px;">${esc(d.error || 'Erro ao carregar.')}</td></tr>`; return; }
+                CUPONS = Array.isArray(d.data) ? d.data : [];
+                renderCupons();
+            } catch (e) {
+                tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ff6b6b;padding:22px;">Falha de conexão.</td></tr>';
+            }
+        }
+
+        function renderCupons() {
+            const tb = document.getElementById('cupomTable');
+            if (!CUPONS.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,0.4);padding:22px;">Nenhum cupom ainda. Clique em “Novo Cupom”.</td></tr>'; return; }
+            tb.innerHTML = CUPONS.map(c => {
+                const desc = c.tipo === 'fixo' ? moeda(c.valor) : `${(+c.valor)}%`;
+                const val = c.validade ? new Date(c.validade + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                const min = (+c.min_compra) > 0 ? moeda(c.min_compra) : '—';
+                const badge = c.ativo ? '<span class="cupom-badge b-ativo">Ativo</span>' : '<span class="cupom-badge b-inativo">Inativo</span>';
+                return `<tr>
+                    <td><strong style="color:#CEE7E6;">${esc(c.codigo)}</strong>${c.descricao ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);">${esc(c.descricao)}</div>` : ''}</td>
+                    <td>${desc}</td>
+                    <td>${min}</td>
+                    <td>${val}</td>
+                    <td>${(+c.usos) || 0}</td>
+                    <td>${badge}</td>
+                    <td style="text-align:right; white-space:nowrap;">
+                        <button class="acao-btn" onclick="alternarAtivo('${c.id}')" title="${c.ativo ? 'Desativar' : 'Ativar'}"><i class="fa-solid fa-power-off"></i></button>
+                        <button class="acao-btn" onclick="editar('${c.id}')" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                        <button class="acao-btn danger" onclick="remover('${c.id}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function abrirModal() {
+            document.getElementById('cupomForm').reset();
+            document.getElementById('cId').value = '';
+            document.getElementById('cAtivo').checked = true;
+            document.getElementById('modalTitulo').textContent = 'Novo Cupom';
+            document.getElementById('modalErro').style.display = 'none';
+            document.getElementById('cupomModal').classList.add('active');
+        }
+        function fecharModal() { document.getElementById('cupomModal').classList.remove('active'); }
+
+        window.editar = function (id) {
+            const c = CUPONS.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('cId').value = c.id;
+            document.getElementById('cCode').value = c.codigo;
+            document.getElementById('cType').value = c.tipo;
+            document.getElementById('cValue').value = c.valor;
+            document.getElementById('cMin').value = (+c.min_compra) > 0 ? c.min_compra : '';
+            document.getElementById('cValidade').value = c.validade || '';
+            document.getElementById('cDesc').value = c.descricao || '';
+            document.getElementById('cAtivo').checked = !!c.ativo;
+            document.getElementById('modalTitulo').textContent = 'Editar Cupom';
+            document.getElementById('modalErro').style.display = 'none';
+            document.getElementById('cupomModal').classList.add('active');
+        };
+
+        window.alternarAtivo = async function (id) {
+            const c = CUPONS.find(x => x.id === id);
+            if (!c) return;
+            await fetch(`/api/cupons?id=${encodeURIComponent(id)}`, { method: 'PATCH', headers: hdr({ 'Content-Type': 'application/json' }), body: JSON.stringify({ ativo: !c.ativo }) });
+            carregarCupons();
+        };
+
+        window.remover = async function (id) {
+            const c = CUPONS.find(x => x.id === id);
+            if (!c) return;
+            if (!confirm(`Excluir o cupom ${c.codigo}? Isso remove ele do site também.`)) return;
+            await fetch(`/api/cupons?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: hdr() });
+            carregarCupons();
+        };
+
+        document.getElementById('cupomForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const erro = document.getElementById('modalErro');
+            const btn = document.getElementById('btnSalvar');
+            erro.style.display = 'none';
+            const id = document.getElementById('cId').value;
+            const corpo = {
+                codigo: document.getElementById('cCode').value,
+                tipo: document.getElementById('cType').value,
+                valor: document.getElementById('cValue').value,
+                min_compra: document.getElementById('cMin').value || 0,
+                validade: document.getElementById('cValidade').value || null,
+                descricao: document.getElementById('cDesc').value || '',
+                ativo: document.getElementById('cAtivo').checked
+            };
+            btn.disabled = true; btn.textContent = 'Salvando...';
+            try {
+                const url = id ? `/api/cupons?id=${encodeURIComponent(id)}` : '/api/cupons';
+                const r = await fetch(url, { method: id ? 'PATCH' : 'POST', headers: hdr({ 'Content-Type': 'application/json' }), body: JSON.stringify(corpo) });
+                const d = await r.json();
+                if (!r.ok) { erro.textContent = d.error || 'Erro ao salvar.'; erro.style.display = 'block'; btn.disabled = false; btn.textContent = 'Salvar cupom'; return; }
+                fecharModal();
+                carregarCupons();
+            } catch (err) {
+                erro.textContent = 'Falha de conexão.'; erro.style.display = 'block';
+            }
+            btn.disabled = false; btn.textContent = 'Salvar cupom';
+        });
+
+        // ---------- Simulador: tabela de avaliação de troca ----------
+        let AVAL = [];
+        function renderAval() {
+            const tb = document.getElementById('avalTable');
+            if (!AVAL.length) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:rgba(255,255,255,0.4);padding:18px;">Nenhum modelo. Clique em “Adicionar modelo”.</td></tr>'; return; }
+            tb.innerHTML = AVAL.map((a, i) => `
+                <tr>
+                    <td><input type="text" value="${esc(a.modelo)}" oninput="AVAL[${i}].modelo=this.value" style="width:100%;padding:9px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:6px;"></td>
+                    <td><input type="number" value="${Number(a.valor) || 0}" min="0" step="50" oninput="AVAL[${i}].valor=this.value" style="width:100%;padding:9px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:6px;"></td>
+                    <td style="text-align:center;"><button class="acao-btn danger" onclick="removerAval(${i})" title="Remover"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`).join('');
+        }
+        window.addLinhaAval = function () { AVAL.push({ modelo: '', valor: 0 }); renderAval(); };
+        window.removerAval = function (i) { AVAL.splice(i, 1); renderAval(); };
+        window.restaurarAval = function () {
+            if (!confirm('Restaurar os valores base sugeridos? As alterações não salvas serão perdidas.')) return;
+            AVAL = (window.SimuladorTroca ? SimuladorTroca.AVALIACAO_PADRAO : []).map(a => ({ modelo: a.modelo, valor: a.valor }));
+            renderAval();
+        };
+        async function carregarAval() {
+            try {
+                const r = await fetch('/api/cupons?config=avaliacao');
+                const d = await r.json();
+                if (d && Array.isArray(d.avaliacao_troca) && d.avaliacao_troca.length) AVAL = d.avaliacao_troca.map(a => ({ modelo: a.modelo, valor: a.valor }));
+                else AVAL = (window.SimuladorTroca ? SimuladorTroca.AVALIACAO_PADRAO : []).map(a => ({ modelo: a.modelo, valor: a.valor }));
+            } catch (e) {
+                AVAL = (window.SimuladorTroca ? SimuladorTroca.AVALIACAO_PADRAO : []).map(a => ({ modelo: a.modelo, valor: a.valor }));
+            }
+            renderAval();
+        }
+        async function salvarAval() {
+            const msg = document.getElementById('avalMsg');
+            const btn = document.getElementById('btnAval');
+            const lista = AVAL.map(a => ({ modelo: String(a.modelo || '').trim(), valor: Math.max(0, Math.round(parseFloat(a.valor) || 0)) })).filter(a => a.modelo);
+            if (!lista.length) { msg.style.color = '#ff6b6b'; msg.textContent = 'Adicione ao menos um modelo.'; return; }
+            btn.disabled = true; msg.style.color = 'rgba(255,255,255,0.6)'; msg.textContent = 'Salvando...';
+            try {
+                const r = await fetch('/api/cupons?config=avaliacao', { method: 'PATCH', headers: hdr({ 'Content-Type': 'application/json' }), body: JSON.stringify({ avaliacao_troca: lista }) });
+                const d = await r.json();
+                if (r.ok) { msg.style.color = '#4CAF50'; msg.textContent = `Tabela salva (${d.total} modelos).`; }
+                else { msg.style.color = '#ff6b6b'; msg.textContent = d.error || 'Erro ao salvar.'; }
+            } catch (e) { msg.style.color = '#ff6b6b'; msg.textContent = 'Falha de conexão.'; }
+            btn.disabled = false;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { carregarPix(); carregarCupons(); carregarAval(); });
+    </script>
+</body>
+</html>
